@@ -334,7 +334,7 @@ def get_num_workers(device="cpu"):
         return 0
 
 def download_data_if_required():
-    url_base = "https://github.com/jgreener64/progres/raw/master/progres"
+    url_base = "https://github.com/jgreener64/progres/raw/main/progres"
     fps = [trained_model_fp]
     urls = [url_base + "/trained_model.pt"]
     for targetdb in pre_embedded_dbs:
@@ -351,8 +351,8 @@ def download_data_if_required():
                 print("Downloading data as first time setup to ", progres_dir,
                       ", internet connection required", sep="", file=sys.stderr)
                 printed = True
-            request.urlretrieve(url, fp)
             try:
+                request.urlretrieve(url, fp)
                 d = torch.load(fp)
                 if fp == trained_model_fp:
                     assert "model" in d

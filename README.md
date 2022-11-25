@@ -14,7 +14,7 @@ Training scripts and datasets will be made available on publication.
 ## Installation
 
 1. Python 3.6 or later is required. The software is OS-independent.
-2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter) and [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) as appropriate for your system. A GPU is not required and will only provide speedup when embedding many structures since multiple workers can be used on CPU. Example commands:
+2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter) and [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) as appropriate for your system. A GPU is not required and will only provide speedup in certain situations since multiple workers can be used on CPU. Example commands:
 ```bash
 conda install pytorch==1.12.0 -c pytorch
 conda install pytorch-scatter pyg -c pyg
@@ -52,8 +52,8 @@ progres search -q query.pdb -t scope95
       5  d1xiza1       153      0.9970  d.112.1.1 - Putative PTS protein STM3784 {Salmonella typhimurium [TaxId: 90371]}
 ...
 ```
-- `-q` is the path to the query structure file. Alternatively, `-l` is a text file with one query file path per line and each result will be printed in turn. This is considerably faster for multiple queries as setup only occurs once and multiple workers can be used.
-- `-t` is the pre-embedded database to search against. Currently this must be either one of the databases listed below or the file path to a pre-embedded dataset.
+- `-q` is the path to the query structure file. Alternatively, `-l` is a text file with one query file path per line and each result will be printed in turn. This is considerably faster for multiple queries since setup only occurs once and multiple workers can be used.
+- `-t` is the pre-embedded database to search against. Currently this must be either one of the databases listed below or the file path to a pre-embedded dataset generated with `progres embed`.
 - `-f` determines the file format of the query structure (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`). By default this is guessed from the file extension, with `pdb` chosen if a guess can't be made. `coords` refers to a text file with the coordinates of a Cα atom separated by white space on each line.
 - `-s` is the minimum similarity threshold above which to return hits, default 0.8.
 - `-m` is the maximum number of hits to return, default 100.
@@ -63,12 +63,12 @@ You can slice out domains manually using software such as the `pdb_selres` comma
 
 The available pre-embedded databases are:
 
-| Name      | Description                                              | n domains | Search time (1) | Search time (100) |
-| --------- | -------------------------------------------------------- | --------- | --------------- | ----------------- |
-| `scope95` | ASTRAL set of SCOPe 2.08 domains clustered at 95% seq ID | 35,371    | 1.49 s          | 3.29 s            |
-| `scope40` | ASTRAL set of SCOPe 2.08 domains clustered at 40% seq ID | 15,127    | 1.46 s          | 2.96 s            |
-| `cath40`  | S40 non-redundant domains from CATH 23/11/22             | 31,884    | 1.52 s          | 3.25 s            |
-| `ecod70`  | F70 representative domains from ECOD develop287          | x         | x.xx s          | x.xx s            |
+| Name      | Description                                                                           | Number of domains | Search time (1 query) | Search time (100 queries) |
+| --------- | ------------------------------------------------------------------------------------- | ----------------- | --------------------- | ------------------------- |
+| `scope95` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 95% seq ID | 35,371            | 1.49 s                | 3.29 s                    |
+| `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID | 15,127            | 1.46 s                | 2.96 s                    |
+| `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                    | 31,884            | 1.52 s                | 3.25 s                    |
+| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287      | x                 | x.xx s                | x.xx s                    |
 
 Search time is for a 150 residue protein (d1a6ja_ in PDB format) on an Intel i9-10980XE CPU with PyTorch 1.11.
 Times are given for 1 or 100 queries.
@@ -94,7 +94,8 @@ import progres as pg
 # Search as above, returns a list where each entry is a dictionary for a query
 # A generator is also available as pg.progres_search_generator
 results = pg.progres_search(querystructure="query.pdb", targetdb="scope95")
-results[0].keys() # dict_keys(['query_num', 'query', 'query_size', 'database', 'minsimilarity', 'maxhits', 'domains', 'hits_nres', 'similarities', 'notes'])
+results[0].keys() # dict_keys(['query_num', 'query', 'query_size', 'database', 'minsimilarity',
+                  #            'maxhits', 'domains', 'hits_nres', 'similarities', 'notes'])
 
 # Pre-embed as above, saves a dictionary
 pg.progres_embed(structurelist="filepaths.txt", outputfile="searchdb.pt")
@@ -111,7 +112,8 @@ embedding.shape # torch.Size([128])
 
 # Embed Cα coordinates and search with the embedding
 # This is useful for using progres in existing pipelines that give out Cα coordinates
-# queryembeddings should have shape (128) or (n, 128) and should be normalised across the 128 dimension
+# queryembeddings should have shape (128) or (n, 128)
+#   and should be normalised across the 128 dimension
 coords = pg.read_coords("query.pdb")
 embedding = pg.embed_coords(coords) # Can take a list of coords or a tensor of shape (nres, 3)
 results = pg.progres_search(queryembeddings=embedding, targetdb="scope95")
