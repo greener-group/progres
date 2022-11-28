@@ -23,7 +23,7 @@ parser_search.add_argument("-l", "--querylist",
     help="text file with one query file path per line")
 parser_search.add_argument("-t", "--targetdb", required=True,
     help=("pre-embedded database to search against, either "
-          "\"scope95\", \"scope40\", \"cath40\" or a file path"))
+          "\"scope95\", \"scope40\", \"cath40\", \"ecod70\" or a file path"))
 parser_search.add_argument("-f", "--fileformat",
     choices=["guess", "pdb", "mmcif", "mmtf", "coords"], default="guess",
     help="file format of the query structure(s), by default guessed from the file extension")
