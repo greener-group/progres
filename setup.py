@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="progres",
-    version="0.1.0",
+    version="0.1.1",
     author="Joe G Greener",
     author_email="jgreener@mrc-lmb.cam.ac.uk",
     description="Fast protein structure searching using structure graph embeddings",
