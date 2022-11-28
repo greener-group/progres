@@ -20,7 +20,7 @@ conda install pytorch==1.12.0 -c pytorch
 conda install pytorch-scatter pyg -c pyg
 ```
 
-3. Run `pip install progres`, which will also install [Biopython](https://biopython.org) and [mmtf-python](https://github.com/rcsb/mmtf-python) if they are not already present.
+3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
 4. The first time you run the software the trained model and pre-embedded databases (~x MB) will be downloaded to the package directory, which requires an internet connection.
 
 ## Usage
