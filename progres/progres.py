@@ -29,8 +29,9 @@ dropout_final = 0.0
 default_minsimilarity = 0.8
 default_maxhits = 100
 pre_embedded_dbs = ["scope95", "scope40", "cath40"]
+database_subdir = "v_0_1_0" # This only needs to change when the databases change
 progres_dir = os.path.dirname(os.path.realpath(__file__))
-database_dir = os.path.join(progres_dir, "databases", "v_0_1_0")
+database_dir = os.path.join(progres_dir, "databases", database_subdir)
 trained_model_fp = os.path.join(progres_dir, "trained_model.pt")
 
 class SinusoidalPositionalEncoding(torch.nn.Module):
@@ -339,10 +340,10 @@ def download_data_if_required():
     urls = [url_base + "/trained_model.pt"]
     for targetdb in pre_embedded_dbs:
         fps.append(os.path.join(database_dir, targetdb + ".pt"))
-        urls.append(f"{url_base}/databases/{targetdb}.pt")
+        urls.append(f"{url_base}/databases/{database_subdir}/{targetdb}.pt")
 
     if not os.path.isdir(database_dir):
-        os.mkdirs(database_dir)
+        os.makedirs(database_dir)
 
     printed = False
     for fp, url in zip(fps, urls):
