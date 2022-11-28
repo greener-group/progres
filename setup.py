@@ -22,6 +22,6 @@ setuptools.setup(
     license="MIT",
     keywords="protein structure search graph embedding",
     scripts=["bin/progres"],
-    install_requires=["biopython", "mmtf-python", "egnn-pytorch"],
+    install_requires=["biopython", "mmtf-python"],
     include_package_data=True,
 )

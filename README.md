@@ -20,7 +20,7 @@ conda install pytorch==1.12.0 -c pytorch
 conda install pytorch-scatter pyg -c pyg
 ```
 
-3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [EGNN PyTorch](https://github.com/lucidrains/egnn-pytorch) if they are not already present.
+3. Run `pip install progres`, which will also install [Biopython](https://biopython.org) and [mmtf-python](https://github.com/rcsb/mmtf-python) if they are not already present.
 4. The first time you run the software the trained model and pre-embedded databases (~x MB) will be downloaded to the package directory, which requires an internet connection.
 
 ## Usage
@@ -34,7 +34,7 @@ For example the `-d` flag sets the device to run on; this is `cpu` by default si
 
 ## Searching a structure against a database
 
-To search a PDB file `query.pdb` against domains in the [SCOPe](https://scop.berkeley.edu) database and print output:
+To search a PDB file `query.pdb` against domains in the SCOPe database and print output:
 ```bash
 progres search -q query.pdb -t scope95
 ```
@@ -68,7 +68,7 @@ The available pre-embedded databases are:
 | `scope95` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 95% seq ID | 35,371            | 1.49 s                | 3.29 s                    |
 | `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID | 15,127            | 1.46 s                | 2.96 s                    |
 | `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                    | 31,884            | 1.52 s                | 3.25 s                    |
-| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287      | x                 | x.xx s                | x.xx s                    |
+| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287      | x                 | x                     | x                         |
 
 Search time is for a 150 residue protein (d1a6ja_ in PDB format) on an Intel i9-10980XE CPU with PyTorch 1.11.
 Times are given for 1 or 100 queries.
@@ -128,3 +128,7 @@ embs = torch.nn.functional.normalize(torch.rand(1000, 128), dim=1)
 scores = pg.embedding_similarity(embs.unsqueeze(0), embs.unsqueeze(1))
 scores.shape # torch.Size([1000, 1000])
 ```
+
+## Notes
+
+The implementation of the E(n)-equivariant GNN uses [EGNN PyTorch](https://github.com/lucidrains/egnn-pytorch).
