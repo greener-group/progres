@@ -490,7 +490,7 @@ def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", b
     fps, domids, notes = [], [], []
     with open(structurelist) as f:
         for line in f.readlines():
-            cols = line.strip().split(None, 1)
+            cols = line.strip().split(None, 2)
             fps.append(cols[0])
             domids.append(cols[1])
             notes.append(cols[2] if len(cols) > 2 else "-")
