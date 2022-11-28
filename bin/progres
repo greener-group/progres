@@ -38,7 +38,7 @@ parser_embed = subparsers.add_parser("embed",
     description="Embed a dataset of structures to allow it to be searched against.",
     help="embed a dataset of structures to allow it to be searched against")
 parser_embed.add_argument("-l", "--structurelist", required=True,
-    help="text file with one structure file path per line")
+    help="text file with file path, domain name and optional note per line")
 parser_embed.add_argument("-o", "--outputfile", required=True,
     help="output file path for the PyTorch file containing the embeddings")
 parser_embed.add_argument("-f", "--fileformat",

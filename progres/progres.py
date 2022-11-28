@@ -487,12 +487,13 @@ def progres_search_print(querystructure=None, querylist=None, queryembeddings=No
 def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", batch_size=None):
     download_data_if_required()
 
-    fps, notes = [], []
+    fps, domids, notes = [], [], []
     with open(structurelist) as f:
         for line in f.readlines():
             cols = line.strip().split(None, 1)
             fps.append(cols[0])
-            notes.append(cols[1] if len(cols) > 1 else "-")
+            domids.append(cols[1])
+            notes.append(cols[2] if len(cols) > 2 else "-")
 
     model = load_trained_model(device)
     data_set = StructureDataset(fps, fileformat, model, device)
@@ -510,7 +511,7 @@ def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", b
 
     torch.save(
         {
-            "ids"       : fps,
+            "ids"       : domids,
             "embeddings": embeddings.cpu(),
             "nres"      : list(n_residues.cpu().numpy()),
             "notes"     : notes,

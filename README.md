@@ -79,7 +79,7 @@ To embed a dataset of structures, allowing it to be searched against:
 ```bash
 progres embed -l filepaths.txt -o searchdb.pt
 ```
-- `-l` is a text file with one file path to a structure per line, each of which will be one entry in the output. Optionally any additional text on a line after the file path is added as a note for the notes column of the results.
+- `-l` is a text file with information on one structure per line, each of which will be one entry in the output. White space should separate the file path to the structure and the domain name, with optionally any additional text being treated as a note for the notes column of the results.
 - `-o` is the output file path for the PyTorch file containing a dictionary with the embeddings and associated data. It can be read in with `torch.load`.
 - `-f` determines the file format of each structure as above (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`).
 
