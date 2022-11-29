@@ -1,5 +1,7 @@
 # Progres - Protein Graph Embedding Search
 
+[![Build status](https://github.com/jgreener64/progres/workflows/CI/badge.svg)](https://github.com/jgreener64/progres/actions)
+
 This repository contains the method from the pre-print:
 
 Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224v1)
