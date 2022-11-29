@@ -21,7 +21,7 @@ conda install pytorch-scatter pyg -c pyg
 ```
 
 3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
-4. The first time you run the software the trained model and pre-embedded databases (~x MB) will be downloaded to the package directory, which requires an internet connection.
+4. The first time you run the software the trained model and pre-embedded databases (~120 MB) will be downloaded to the package directory, which requires an internet connection.
 
 ## Usage
 
@@ -68,7 +68,7 @@ The available pre-embedded databases are:
 | `scope95` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 95% seq ID | 35,371            | 1.49 s                | 3.29 s                    |
 | `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID | 15,127            | 1.46 s                | 2.96 s                    |
 | `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                    | 31,884            | 1.52 s                | 3.25 s                    |
-| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287      | x                 | x                     | x                         |
+| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287      | 71,635            | 1.55 s                | 3.82 s                    |
 
 Search time is for a 150 residue protein (d1a6ja_ in PDB format) on an Intel i9-10980XE CPU with PyTorch 1.11.
 Times are given for 1 or 100 queries.
