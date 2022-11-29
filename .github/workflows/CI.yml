@@ -25,6 +25,12 @@ jobs:
         auto-update-conda: true
         activate-environment: progres
         python-version: ${{ matrix.python-version }}
+    - name: Test activation 1
+      run: conda env list
+    - name: Test activation 2
+      run: conda activate progres
+    - name: Test activation 3
+      run: conda env list
     - name: Test path 1
       run: which -a python
     - name: Test path 2
@@ -57,6 +63,12 @@ jobs:
         auto-update-conda: true
         activate-environment: progres
         python-version: ${{ matrix.python-version }}
+    - name: Test activation 1
+      run: conda env list
+    - name: Test activation 2
+      run: conda activate progres
+    - name: Test activation 3
+      run: conda env list
     - name: Test path 1
       run: which -a python
     - name: Test path 2
