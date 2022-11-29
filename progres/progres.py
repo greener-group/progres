@@ -29,10 +29,12 @@ dropout_final = 0.0
 default_minsimilarity = 0.8
 default_maxhits = 100
 pre_embedded_dbs = ["scope95", "scope40", "cath40", "ecod70"]
-database_subdir = "v_0_1_0" # This only needs to change when the databases change
-progres_dir = os.path.dirname(os.path.realpath(__file__))
-database_dir = os.path.join(progres_dir, "databases", database_subdir)
-trained_model_fp = os.path.join(progres_dir, "trained_model.pt")
+trained_model_subdir = "v_0_1_0" # This only needs to change when the trained model changes
+database_subdir      = "v_0_1_0" # This only needs to change when the databases change
+progres_dir       = os.path.dirname(os.path.realpath(__file__))
+trained_model_dir = os.path.join(progres_dir, "trained_models", trained_model_subdir)
+database_dir      = os.path.join(progres_dir, "databases"     , database_subdir     )
+trained_model_fp  = os.path.join(trained_model_dir, "trained_model.pt")
 
 class SinusoidalPositionalEncoding(torch.nn.Module):
     def __init__(self, channels):
@@ -337,11 +339,13 @@ def get_num_workers(device="cpu"):
 def download_data_if_required():
     url_base = "https://github.com/jgreener64/progres/raw/main/progres"
     fps = [trained_model_fp]
-    urls = [url_base + "/trained_model.pt"]
+    urls = [f"{url_base}/trained_models/{trained_model_subdir}/trained_model.pt"]
     for targetdb in pre_embedded_dbs:
         fps.append(os.path.join(database_dir, targetdb + ".pt"))
         urls.append(f"{url_base}/databases/{database_subdir}/{targetdb}.pt")
 
+    if not os.path.isdir(trained_model_dir):
+        os.makedirs(trained_model_dir)
     if not os.path.isdir(database_dir):
         os.makedirs(database_dir)
 
@@ -349,7 +353,7 @@ def download_data_if_required():
     for fp, url in zip(fps, urls):
         if not os.path.isfile(fp):
             if not printed:
-                print("Downloading data as first time setup to ", progres_dir,
+                print("Downloading data as first time setup (~120 MB) to ", progres_dir,
                       ", internet connection required", sep="", file=sys.stderr)
                 printed = True
             try:
