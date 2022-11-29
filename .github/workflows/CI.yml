@@ -1,0 +1,67 @@
+name: CI
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    tags: '*'
+  schedule:
+    - cron: '00 04 * * 1' # 4am every Monday
+  workflow_dispatch:
+jobs:
+  test_repo:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - 3.9
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up conda with Python ${{ matrix.python-version }}
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+    - name: Install PyTorch
+      run: conda install pytorch==1.12.0 -c pytorch
+    - name: Install PyTorch Scatter and PyTorch Geometric
+      run: conda install pytorch-scatter pyg -c pyg
+    - name: Test install
+      run: pip install .
+    - name: Test help
+      run: time python bin/progres -h
+    - name: Test import
+      run: time python -c "import progres"
+    - name: Download structure
+      run: wget https://files.rcsb.org/view/1CRN.pdb
+    - name: Test search
+      run: time python bin/progres -q 1CRN.pdb -t scope95
+  test_pypi:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - 3.9
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up conda with Python ${{ matrix.python-version }}
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+    - name: Install PyTorch
+      run: conda install pytorch==1.12.0 -c pytorch
+    - name: Install PyTorch Scatter and PyTorch Geometric
+      run: conda install pytorch-scatter pyg -c pyg
+    - name: Test install
+      run: pip install progres
+    - name: Test help
+      run: time progres -h
+    - name: Test import
+      run: time python -c "import progres"
+    - name: Download structure
+      run: wget https://files.rcsb.org/view/1CRN.pdb
+    - name: Test search
+      run: time progres -q 1CRN.pdb -t scope95

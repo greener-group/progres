@@ -70,7 +70,7 @@ The available pre-embedded databases are:
 | `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                    | 31,884            | 1.52 s                | 3.25 s                    |
 | `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287      | 71,635            | 1.55 s                | 3.82 s                    |
 
-Search time is for a 150 residue protein (d1a6ja_ in PDB format) on an Intel i9-10980XE CPU with PyTorch 1.11.
+Search time is for a 150 residue protein (d1a6ja_ in PDB format) on an Intel i9-10980XE CPU with 256 GB RAM and PyTorch 1.11.
 Times are given for 1 or 100 queries.
 
 ## Pre-embed a dataset to search against
