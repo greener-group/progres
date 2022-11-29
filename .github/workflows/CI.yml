@@ -32,7 +32,7 @@ jobs:
     - name: Install PyTorch Scatter and PyTorch Geometric
       run: conda install pytorch-scatter pyg -c pyg
     - name: Test install
-      run: pip install .
+      run: pip install -e .
     - name: Test help
       run: time python bin/progres -h
     - name: Test import
