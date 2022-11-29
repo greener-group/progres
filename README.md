@@ -1,8 +1,8 @@
 # Progres - Protein Graph Embedding Search
 
-This repository contains the method in the pre-print:
+This repository contains the method from the pre-print:
 
-...
+Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224v1)
 
 It provides the `progres` Python package that lets you search structures against pre-embedded structural databases and pre-embed datasets for searching against. Searching typically takes 1-2 s and is faster for multiple queries. Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info) and [ECOD](http://prodata.swmed.edu/ecod) are provided for searching against but we aim to add others such as the [AlphaFold database](https://alphafold.ebi.ac.uk) in future.
 
