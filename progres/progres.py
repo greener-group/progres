@@ -358,7 +358,7 @@ def download_data_if_required():
                 printed = True
             try:
                 request.urlretrieve(url, fp)
-                d = torch.load(fp)
+                d = torch.load(fp, map_location="cpu")
                 if fp == trained_model_fp:
                     assert "model" in d
                 else:
