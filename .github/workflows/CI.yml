@@ -27,12 +27,6 @@ jobs:
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
-    - name: Test activation
-      run: conda env list
-    - name: Test path 1
-      run: which -a python
-    - name: Test path 2
-      run: which -a python3
     - name: Install PyTorch
       run: conda install pytorch==1.12.0 -c pytorch
     - name: Install PyTorch Scatter and PyTorch Geometric
@@ -46,7 +40,7 @@ jobs:
     - name: Download structure
       run: wget https://files.rcsb.org/view/1CRN.pdb
     - name: Test search
-      run: time python bin/progres -q 1CRN.pdb -t scope95
+      run: time python bin/progres search -q 1CRN.pdb -t scope95
   test_pypi:
     runs-on: ubuntu-latest
     strategy:
@@ -63,12 +57,6 @@ jobs:
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
-    - name: Test activation
-      run: conda env list
-    - name: Test path 1
-      run: which -a python
-    - name: Test path 2
-      run: which -a python3
     - name: Install PyTorch
       run: conda install pytorch==1.12.0 -c pytorch
     - name: Install PyTorch Scatter and PyTorch Geometric
@@ -82,4 +70,4 @@ jobs:
     - name: Download structure
       run: wget https://files.rcsb.org/view/1CRN.pdb
     - name: Test search
-      run: time progres -q 1CRN.pdb -t scope95
+      run: time progres search -q 1CRN.pdb -t scope95

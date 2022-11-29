@@ -368,7 +368,7 @@ def download_data_if_required():
                     os.remove(fp)
                 print("Failed to download from", url, "and save to", fp, file=sys.stderr)
                 print("Exiting", file=sys.stderr)
-                sys.exit()
+                sys.exit(1)
 
     if printed:
         print("Data downloaded successfully", file=sys.stderr)
