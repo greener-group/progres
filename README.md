@@ -63,6 +63,9 @@ progres search -q query.pdb -t scope95
 Query structures should be a single protein domain, though it can be discontinuous (chain IDs are ignored).
 You can slice out domains manually using software such as the `pdb_selres` command from [pdb-tools](http://www.bonvinlab.org/pdb-tools).
 
+Interpreting the hit descriptions depends on the database being searched.
+The domain name often includes a reference to the corresponding PDB file, for example d1a6ja_ refers to PDB ID 1A6J chain A, and this can be opened in the [RCSB PDB structure view](https://www.rcsb.org/3d-view/1A6J/1) to get a quick look.
+
 The available pre-embedded databases are:
 
 | Name      | Description                                                                           | Number of domains | Search time (1 query) | Search time (100 queries) |
