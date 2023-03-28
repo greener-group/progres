@@ -15,13 +15,13 @@ import pkg_resources
 import sys
 from urllib import request
 
-n_layers = 12
+n_layers = 6
 embedding_size = 128
 hidden_dim = 128
 hidden_egnn_dim = 64
 hidden_edge_dim = 256
 pos_embed_dim = 64
-n_features = pos_embed_dim + 3
+n_features = pos_embed_dim + 4
 pos_embed_freq_inv = 2000
 contact_dist = 10.0 # Å
 dropout = 0.0
@@ -29,8 +29,8 @@ dropout_final = 0.0
 default_minsimilarity = 0.8
 default_maxhits = 100
 pre_embedded_dbs = ["scope95", "scope40", "cath40", "ecod70"]
-trained_model_subdir = "v_0_1_0" # This only needs to change when the trained model changes
-database_subdir      = "v_0_1_0" # This only needs to change when the databases change
+trained_model_subdir = "v_0_2_0" # This only needs to change when the trained model changes
+database_subdir      = "v_0_2_0" # This only needs to change when the databases change
 progres_dir       = os.path.dirname(os.path.realpath(__file__))
 trained_model_dir = os.path.join(progres_dir, "trained_models", trained_model_subdir)
 database_dir      = os.path.join(progres_dir, "databases"     , database_subdir     )
@@ -281,14 +281,31 @@ def coords_to_graph(coords):
     edge_index = contacts.to_sparse().indices()
 
     degrees = contacts.sum(dim=0)
-    norm_degrees = degrees / degrees.max()
+    norm_degrees = (degrees / degrees.max()).unsqueeze(1)
     term_features = [[0.0, 0.0] for _ in range(n_res)]
     term_features[ 0][0] = 1.0
     term_features[-1][1] = 1.0
-    nf = torch.cat((norm_degrees.unsqueeze(1), torch.tensor(term_features)), dim=1)
-    tf = torch.zeros(n_res, 0)
+    term_features = torch.tensor(term_features)
+
+    # The tau torsion angle is between 4 consecutive Cα atoms, we assign it to the second Cα
+    # This feature breaks mirror invariance
+    vec_ab = coords[1:-2] - coords[ :-3]
+    vec_bc = coords[2:-1] - coords[1:-2]
+    vec_cd = coords[3:  ] - coords[2:-1]
+    cross_ab_bc = torch.cross(vec_ab, vec_bc, dim=1)
+    cross_bc_cd = torch.cross(vec_bc, vec_cd, dim=1)
+    taus = torch.atan2(
+        (torch.cross(cross_ab_bc, cross_bc_cd, dim=1) * normalize(vec_bc, dim=1)).sum(dim=1),
+        (cross_ab_bc * cross_bc_cd).sum(dim=1),
+    )
+    taus_pad = torch.cat((
+        torch.tensor([0.0]),
+        taus / torch.pi, # Convert to range -1 -> 1
+        torch.tensor([0.0, 0.0]),
+    )).unsqueeze(1)
+
     pos_embed = pos_embedder(torch.arange(1, n_res + 1))
-    x = torch.cat((nf, tf, pos_embed), dim=1)
+    x = torch.cat((norm_degrees, term_features, taus_pad, pos_embed), dim=1)
     data = Data(x=x, edge_index=edge_index, coords=coords)
     return data
 
