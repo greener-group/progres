@@ -70,10 +70,10 @@ The available pre-embedded databases are:
 
 | Name      | Description                                                                                                                                                | Number of domains | Search time (1 query) | Search time (100 queries) |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | --------------------- | ------------------------- |
-| `scope95` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 95% seq ID                                                                      | 35,371            | 1.49 s                | 3.29 s                    |
-| `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID                                                                      | 15,127            | 1.46 s                | 2.96 s                    |
-| `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                                                                                         | 31,884            | 1.52 s                | 3.25 s                    |
-| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287                                                                           | 71,635            | 1.55 s                | 3.82 s                    |
+| `scope95` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 95% seq ID                                                                      | 35,371            | 1.43 s                | 2.47 s                    |
+| `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID                                                                      | 15,127            | 1.36 s                | 2.25 s                    |
+| `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                                                                                         | 31,884            | 1.44 s                | 2.42 s                    |
+| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287                                                                           | 71,635            | 1.48 s                | 3.36 s                    |
 | `af21org` | [AlphaFold](https://alphafold.ebi.ac.uk) structures for 21 model organisms split into domains by [CATH-Assign](https://doi.org/10.1038/s42003-023-04488-9) | 338,258           | 2.15 s                | 7.88 s                    |
 
 Search time is for a 150 residue protein (d1a6ja_ in PDB format) on an Intel i9-10980XE CPU with 256 GB RAM and PyTorch 1.11.
