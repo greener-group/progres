@@ -29,6 +29,7 @@ dropout_final = 0.0
 default_minsimilarity = 0.8
 default_maxhits = 100
 pre_embedded_dbs = ["scope95", "scope40", "cath40", "ecod70"]
+zenodo_record = "7782089" # This only needs to change when the trained model or databases change
 trained_model_subdir = "v_0_2_0" # This only needs to change when the trained model changes
 database_subdir      = "v_0_2_0" # This only needs to change when the databases change
 progres_dir       = os.path.dirname(os.path.realpath(__file__))
@@ -354,12 +355,12 @@ def get_num_workers(device="cpu"):
         return 0
 
 def download_data_if_required():
-    url_base = "https://github.com/jgreener64/progres/raw/main/progres"
+    url_base = f"https://zenodo.org/record/{zenodo_record}/files"
     fps = [trained_model_fp]
-    urls = [f"{url_base}/trained_models/{trained_model_subdir}/trained_model.pt"]
+    urls = [f"{url_base}/trained_model.pt"]
     for targetdb in pre_embedded_dbs:
         fps.append(os.path.join(database_dir, targetdb + ".pt"))
-        urls.append(f"{url_base}/databases/{database_subdir}/{targetdb}.pt")
+        urls.append(f"{url_base}/{targetdb}.pt")
 
     if not os.path.isdir(trained_model_dir):
         os.makedirs(trained_model_dir)
