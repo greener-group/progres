@@ -45,13 +45,13 @@ progres search -q query.pdb -t scope95
 # QUERY: query.pdb
 # QUERY_SIZE: 150 residues
 # DATABASE: scope95
-# PARAMETERS: minsimilarity 0.8, maxhits 100, progres v0.1.3
+# PARAMETERS: minsimilarity 0.8, maxhits 100, progres v0.2.0
 # HIT_N  DOMAIN   HIT_NRES  SIMILARITY  NOTES
       1  d1a6ja_       150      1.0000  d.112.1.1 - Nitrogen regulatory bacterial protein IIa-ntr {Escherichia coli [TaxId: 562]}
-      2  d3urra1       151      0.9992  d.112.1.0 - automated matches {Burkholderia thailandensis [TaxId: 271848]}
-      3  d2a0ja_       146      0.9982  d.112.1.0 - automated matches {Neisseria meningitidis [TaxId: 122586]}
-      4  d2oqta1       150      0.9976  d.112.1.0 - automated matches {Streptococcus pyogenes [TaxId: 301447]}
-      5  d1xiza1       153      0.9970  d.112.1.1 - Putative PTS protein STM3784 {Salmonella typhimurium [TaxId: 90371]}
+      2  d2a0ja_       146      0.9988  d.112.1.0 - automated matches {Neisseria meningitidis [TaxId: 122586]}
+      3  d3urra1       151      0.9983  d.112.1.0 - automated matches {Burkholderia thailandensis [TaxId: 271848]}
+      4  d3lf6a_       154      0.9971  d.112.1.1 - automated matches {Artificial gene [TaxId: 32630]}
+      5  d3oxpa1       147      0.9968  d.112.1.0 - automated matches {Yersinia pestis [TaxId: 214092]}
 ...
 ```
 - `-q` is the path to the query structure file. Alternatively, `-l` is a text file with one query file path per line and each result will be printed in turn. This is considerably faster for multiple queries since setup only occurs once and multiple workers can be used.
