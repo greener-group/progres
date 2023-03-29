@@ -9,8 +9,9 @@ Greener JG and Jamali K. Fast protein structure searching using structure graph 
 It provides the `progres` Python package that lets you search structures against pre-embedded structural databases and pre-embed datasets for searching against. Searching typically takes 1-2 s and is faster for multiple queries. Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod) and the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) are provided for searching against. We may add others such as the whole [AlphaFold database](https://alphafold.ebi.ac.uk) and the [ESM Metagenomic Atlas](https://esmatlas.com) in future.
 
 This is work in progress software - the implementation, API and results may change.
-Please open issues or [contact me](http://jgreener64.github.io) with any feedback.
 Appropriate version numbers will distinguish versions.
+Since the pre-print the model has been updated and the AlphaFold structures have been made available to search against.
+Please open issues or [contact me](http://jgreener64.github.io) with any feedback.
 Training scripts and datasets will be made available on publication.
 
 ## Installation
