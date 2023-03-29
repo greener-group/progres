@@ -6,7 +6,7 @@ This repository contains the method from the pre-print:
 
 Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224v1)
 
-It provides the `progres` Python package that lets you search structures against pre-embedded structural databases and pre-embed datasets for searching against. Searching typically takes 1-2 s and is faster for multiple queries. Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info) and [ECOD](http://prodata.swmed.edu/ecod) are provided for searching against but we aim to add others such as the [AlphaFold database](https://alphafold.ebi.ac.uk) in future.
+It provides the `progres` Python package that lets you search structures against pre-embedded structural databases and pre-embed datasets for searching against. Searching typically takes 1-2 s and is faster for multiple queries. Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod) and the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) are provided for searching against. We may add others such as the whole [AlphaFold database](https://alphafold.ebi.ac.uk) and the [ESM Metagenomic Atlas](https://esmatlas.com) in future.
 
 This is work in progress software - the implementation, API and results may change.
 Please open issues or [contact me](http://jgreener64.github.io) with any feedback.
@@ -23,7 +23,7 @@ conda install pytorch-scatter pyg -c pyg
 ```
 
 3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
-4. The first time you run the software the trained model and pre-embedded databases (~120 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes.
+4. The first time you run the software the trained model and pre-embedded databases (~340 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes.
 
 ## Usage
 
@@ -68,12 +68,13 @@ The domain name often includes a reference to the corresponding PDB file, for ex
 
 The available pre-embedded databases are:
 
-| Name      | Description                                                                           | Number of domains | Search time (1 query) | Search time (100 queries) |
-| --------- | ------------------------------------------------------------------------------------- | ----------------- | --------------------- | ------------------------- |
-| `scope95` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 95% seq ID | 35,371            | 1.49 s                | 3.29 s                    |
-| `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID | 15,127            | 1.46 s                | 2.96 s                    |
-| `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                    | 31,884            | 1.52 s                | 3.25 s                    |
-| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287      | 71,635            | 1.55 s                | 3.82 s                    |
+| Name      | Description                                                                                                                                                | Number of domains | Search time (1 query) | Search time (100 queries) |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | --------------------- | ------------------------- |
+| `scope95` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 95% seq ID                                                                      | 35,371            | 1.49 s                | 3.29 s                    |
+| `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID                                                                      | 15,127            | 1.46 s                | 2.96 s                    |
+| `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                                                                                         | 31,884            | 1.52 s                | 3.25 s                    |
+| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287                                                                           | 71,635            | 1.55 s                | 3.82 s                    |
+| `af21org` | [AlphaFold](https://alphafold.ebi.ac.uk) structures for 21 model organisms split into domains by [CATH-Assign](https://doi.org/10.1038/s42003-023-04488-9) | 338,258           | 2.15 s                | 7.88 s                    |
 
 Search time is for a 150 residue protein (d1a6ja_ in PDB format) on an Intel i9-10980XE CPU with 256 GB RAM and PyTorch 1.11.
 Times are given for 1 or 100 queries.
