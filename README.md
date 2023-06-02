@@ -16,7 +16,7 @@ Training scripts and datasets will be made available on publication.
 
 ## Installation
 
-1. Python 3.6 or later is required. The software is OS-independent.
+1. Python 3.7 or later is required. The software is OS-independent.
 2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter) and [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) as appropriate for your system. A GPU is not required and will only provide speedup in certain situations since multiple workers can be used on CPU. Example commands:
 ```bash
 conda install pytorch==1.12.0 -c pytorch
