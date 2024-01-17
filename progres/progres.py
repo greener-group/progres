@@ -273,7 +273,8 @@ def read_coords(fp, fileformat="guess"):
 
 def coords_to_graph(coords):
     n_res = len(coords)
-    coords = torch.tensor(coords)
+    if not isinstance(coords, torch.Tensor):
+        coords = torch.tensor(coords)
     if coords.size(1) != 3:
         raise ValueError("coords must be, or must be convertible to, a tensor of shape (nres, 3)")
     dmap = torch.cdist(coords.unsqueeze(0), coords.unsqueeze(0),
