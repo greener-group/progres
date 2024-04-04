@@ -8,7 +8,7 @@ import sys
 
 parser = argparse.ArgumentParser(description=(
     "Fast protein structure searching using structure graph embeddings. "
-    "See https://github.com/jgreener64/progres for documentation and citation information. "
+    "See https://github.com/greener-group/progres for documentation and citation information. "
     f"This is version {pkg_resources.get_distribution('progres').version} of the software."
 ))
 subparsers = parser.add_subparsers(dest="mode",

@@ -11,7 +11,7 @@ setuptools.setup(
     description="Fast protein structure searching using structure graph embeddings",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/jgreener64/progres",
+    url="https://github.com/greener-group/progres",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

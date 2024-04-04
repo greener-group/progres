@@ -1,6 +1,6 @@
 # Progres - Protein Graph Embedding Search
 
-[![Build status](https://github.com/jgreener64/progres/workflows/CI/badge.svg)](https://github.com/jgreener64/progres/actions)
+[![Build status](https://github.com/greener-group/progres/workflows/CI/badge.svg)](https://github.com/greener-group/progres/actions)
 
 This repository contains the method from the pre-print:
 
