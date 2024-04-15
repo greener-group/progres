@@ -1,6 +1,6 @@
 # Fast protein structure searching using structure graph embeddings
 
-# biopython imported in a function
+# faiss and biopython imported in functions
 import torch
 from torch.nn import Dropout, Identity, Linear, Sequential, SiLU
 from torch.nn.functional import normalize
@@ -29,9 +29,10 @@ dropout_final = 0.0
 default_minsimilarity = 0.8
 default_maxhits = 100
 pre_embedded_dbs = ["scope95", "scope40", "cath40", "ecod70", "af21org"]
+pre_embedded_dbs_faiss = ["afted"]
 zenodo_record = "7782089" # This only needs to change when the trained model or databases change
 trained_model_subdir = "v_0_2_0" # This only needs to change when the trained model changes
-database_subdir      = "v_0_2_0" # This only needs to change when the databases change
+database_subdir      = "v_0_2_1" # This only needs to change when the databases change
 progres_dir       = os.path.dirname(os.path.realpath(__file__))
 trained_model_dir = os.path.join(progres_dir, "trained_models", trained_model_subdir)
 database_dir      = os.path.join(progres_dir, "databases"     , database_subdir     )
@@ -320,7 +321,8 @@ def embedding_distance(emb_1, emb_2):
     return (1 - cosine_dist) / 2 # Runs 0 (close) to 1 (far)
 
 def embedding_similarity(emb_1, emb_2):
-    return 1 - embedding_distance(emb_1, emb_2) # Runs 0 (far) to 1 (close)
+    cosine_dist = (emb_1 * emb_2).sum(dim=-1) # Normalised in the model
+    return (1 + cosine_dist) / 2 # Runs 0 (far) to 1 (close)
 
 def load_trained_model(device="cpu"):
     model = Model().to(device)
@@ -329,25 +331,29 @@ def load_trained_model(device="cpu"):
     model.eval()
     return model
 
-def embed_graph(graph, device="cpu"):
+def embed_graph(graph, device="cpu", model=None):
     with torch.no_grad():
-        model = load_trained_model(device)
+        if model is None:
+            model = load_trained_model(device)
         data_loader = DataLoader([graph], batch_size=1)
         for batch in data_loader:
             emb = model(batch.to(device))
             break
         return emb.squeeze(0)
 
-def embed_coords(coords, device="cpu"):
+def embed_coords(coords, device="cpu", model=None):
     graph = coords_to_graph(coords)
-    return embed_graph(graph, device)
+    return embed_graph(graph, device, model)
 
-def embed_structure(querystructure, fileformat="guess", device="cpu"):
+def embed_structure(querystructure, fileformat="guess", device="cpu", model=None):
     graph = read_graph(querystructure, fileformat)
-    return embed_graph(graph, device)
+    return embed_graph(graph, device, model)
 
-def get_batch_size(device="cpu"):
-    return 8
+def get_batch_size(device="cpu", using_faiss=False):
+    if using_faiss:
+        return 32
+    else:
+        return 8
 
 def get_num_workers(device="cpu"):
     if device == "cpu":
@@ -355,13 +361,17 @@ def get_num_workers(device="cpu"):
     else:
         return 0
 
-def download_data_if_required():
+def download_data_if_required(download_afted=False):
     url_base = f"https://zenodo.org/record/{zenodo_record}/files"
     fps = [trained_model_fp]
     urls = [f"{url_base}/trained_model.pt"]
     for targetdb in pre_embedded_dbs:
         fps.append(os.path.join(database_dir, targetdb + ".pt"))
         urls.append(f"{url_base}/{targetdb}.pt")
+    if download_afted:
+        for fn in ["afted.index", "afted_noembs.pt"]:
+            fps.append(os.path.join(database_dir, fn))
+            urls.append(f"{url_base}/{fn}")
 
     if not os.path.isdir(trained_model_dir):
         os.makedirs(trained_model_dir)
@@ -376,13 +386,19 @@ def download_data_if_required():
                       ", internet connection required, this can take a few minutes",
                       sep="", file=sys.stderr)
                 printed = True
+            if fp.endswith("afted.index"):
+                print("Downloading afted data as first time setup (~33 GB) to ", database_dir,
+                      ", internet connection required, this can take a while",
+                      sep="", file=sys.stderr)
+                printed = True
             try:
                 request.urlretrieve(url, fp)
-                d = torch.load(fp, map_location="cpu")
-                if fp == trained_model_fp:
-                    assert "model" in d
-                else:
-                    assert "embeddings" in d
+                if not fp.endswith("afted.index"):
+                    d = torch.load(fp, map_location="cpu")
+                    if fp == trained_model_fp:
+                        assert "model" in d
+                    else:
+                        assert "notes" in d
             except:
                 if os.path.isfile(fp):
                     os.remove(fp)
@@ -401,13 +417,21 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
     if targetdb is None:
         raise ValueError("targetdb must be given")
 
-    download_data_if_required()
+    download_data_if_required(targetdb == "afted")
 
-    if targetdb in pre_embedded_dbs:
+    if targetdb in pre_embedded_dbs_faiss:
+        import faiss
+        print(f"Loading {targetdb} data, this can take a minute", file=sys.stderr)
+        target_index = faiss.read_index(os.path.join(database_dir, f"{targetdb}.index"))
+        target_data = torch.load(os.path.join(database_dir, f"{targetdb}_noembs.pt"), map_location=device)
+        search_type = "faiss"
+    elif targetdb in pre_embedded_dbs:
         target_fp = os.path.join(database_dir, targetdb + ".pt")
         target_data = torch.load(target_fp, map_location=device)
+        search_type = "torch"
     else:
         target_data = torch.load(targetdb, map_location=device)
+        search_type = "torch"
 
     model = load_trained_model(device)
     if querystructure is not None:
@@ -427,27 +451,46 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
         num_workers = 0
 
     if batch_size is None:
-        batch_size = get_batch_size(device)
-    data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=False,
-                             num_workers=num_workers)
+        batch_size = get_batch_size(device, search_type == "faiss")
+    data_loader = DataLoader(
+        data_set,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+    )
 
     with torch.no_grad():
         qi = 0
         for embs, nress in data_loader:
+            if search_type == "faiss":
+                sims_ord_batch, inds_ord_batch = target_index.search(embs.cpu().numpy(), maxhits)
+
             for bi in range(embs.size(0)):
                 query_size = nress[bi].item() if type(nress) == torch.Tensor else "?"
-                dists = embedding_distance(embs[bi], target_data["embeddings"])
-                hits = dists.argsort()[:maxhits].to("cpu") # Move to CPU since we loop over
-
+                if search_type == "faiss":
+                    sims_ord = sims_ord_batch[bi]
+                    inds_ord = inds_ord_batch[bi]
+                else:
+                    dists = embedding_distance(embs[bi], target_data["embeddings"])
+                    inds_ord = dists.argsort()[:maxhits].to("cpu")
                 domids, hits_nres, similarities, notes = [], [], [], []
-                for i, di in enumerate(hits):
-                    similarity = (1 - dists[di]).item()
-                    if similarity < minsimilarity:
-                        break
-                    domids.append(target_data["ids"][di])
-                    hits_nres.append(target_data["nres"][di])
-                    similarities.append(similarity)
-                    notes.append(target_data["notes"][di])
+                if search_type == "faiss":
+                    for si, similarity in enumerate(sims_ord):
+                        if similarity < minsimilarity:
+                            break
+                        domids.append(target_data["ids"][inds_ord[si]])
+                        hits_nres.append(target_data["nres"][inds_ord[si]])
+                        similarities.append(similarity)
+                        notes.append(target_data["notes"][inds_ord[si]])
+                else:
+                    for i in inds_ord:
+                        similarity = (1 - dists[i]).item()
+                        if similarity < minsimilarity:
+                            break
+                        domids.append(target_data["ids"][i])
+                        hits_nres.append(target_data["nres"][i])
+                        similarities.append(similarity)
+                        notes.append(target_data["notes"][i])
 
                 result_dict = {
                     "query_num":     qi + 1,
@@ -486,12 +529,13 @@ def progres_search_print(querystructure=None, querylist=None, queryembeddings=No
         padding_inds      = max(len(s) for s in inds_str        + ["# HIT_N" ])
         padding_domids    = max(len(s) for s in rd["domains"]   + ["DOMAIN"  ])
         padding_hits_nres = max(len(s) for s in hits_nres_str   + ["HIT_NRES"])
+        faiss_str = ", FAISS search" if targetdb in pre_embedded_dbs_faiss else ""
 
         print("# QUERY_NUM:" , rd["query_num"])
         print("# QUERY:"     , rd["query"])
         print("# QUERY_SIZE:", rd["query_size"], "residues")
         print("# DATABASE:", targetdb)
-        print(f"# PARAMETERS: minsimilarity {minsimilarity}, maxhits {maxhits}, progres v{version}")
+        print(f"# PARAMETERS: minsimilarity {minsimilarity}, maxhits {maxhits}, progres v{version}{faiss_str}")
         print("  ".join([
             "#" + " HIT_N".rjust(padding_inds - 1),
             "DOMAIN".ljust(padding_domids),
@@ -524,8 +568,12 @@ def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", b
     data_set = StructureDataset(fps, fileformat, model, device)
     if batch_size is None:
         batch_size = get_batch_size(device)
-    data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=False,
-                             num_workers=get_num_workers(device))
+    data_loader = DataLoader(
+        data_set,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=get_num_workers(device),
+    )
 
     with torch.no_grad():
         embeddings = torch.zeros(len(data_set), embedding_size, device=device)
