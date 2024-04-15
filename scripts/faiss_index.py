@@ -3,7 +3,7 @@
 import torch
 import faiss
 
-d = torch.load("afted.pt") # See Zenodo for this file
+d = torch.load("afted.pt")
 embs = d["embeddings"].numpy()
 
 index = faiss.IndexFlatIP(128)
