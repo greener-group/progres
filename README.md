@@ -4,27 +4,25 @@
 
 This repository contains the method from the pre-print:
 
-Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224v1)
+Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224)
 
-It provides the `progres` Python package that lets you search structures against pre-embedded structural databases and pre-embed datasets for searching against. Searching typically takes 1-2 s and is faster for multiple queries. Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod) and the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) are provided for searching against. We may add others such as the whole [AlphaFold database](https://alphafold.ebi.ac.uk) and the [ESM Metagenomic Atlas](https://esmatlas.com) in future.
-
-This is work in progress software - the implementation, API and results may change.
-Appropriate version numbers will distinguish versions.
-Since the pre-print the model has been updated and the AlphaFold structures have been made available to search against.
-Please open issues or [contact me](http://jgreener64.github.io) with any feedback.
-Training scripts and datasets will be made available on publication.
+It provides the `progres` Python package that lets you search structures against pre-embedded structural databases and pre-embed datasets for searching against.
+Searching typically takes 1-2 s and is faster for multiple queries.
+For the AlphaFold database, initial data loading takes around a minute but subsequent searching is less than a quarter of a second per query.
+Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod), the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) and the [AlphaFold database TED domains](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) are provided for searching against.
 
 ## Installation
 
 1. Python 3.7 or later is required. The software is OS-independent.
-2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter) and [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) as appropriate for your system. A GPU is not required and will only provide speedup in certain situations since multiple workers can be used on CPU. Example commands:
+2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter), [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) and [FAISS](https://github.com/facebookresearch/faiss) as appropriate for your system. A GPU is not required and will only provide speedup in certain situations since multiple workers can be used on CPU. Example commands:
 ```bash
-conda install pytorch==1.12.0 -c pytorch
+conda install pytorch==1.12.0 faiss-cpu -c pytorch
 conda install pytorch-scatter pyg -c pyg
 ```
 
-3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
-4. The first time you run the software the trained model and pre-embedded databases (~340 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes.
+1. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
+2. The first time you search with the software the trained model and pre-embedded databases (~340 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes.
+3. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded in a similar way. Make sure you have enough disk space!
 
 ## Usage
 
@@ -69,16 +67,19 @@ The domain name often includes a reference to the corresponding PDB file, for ex
 
 The available pre-embedded databases are:
 
-| Name      | Description                                                                                                                                                | Number of domains | Search time (1 query) | Search time (100 queries) |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | --------------------- | ------------------------- |
-| `scope95` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 95% seq ID                                                                      | 35,371            | 1.43 s                | 2.47 s                    |
-| `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID                                                                      | 15,127            | 1.36 s                | 2.25 s                    |
-| `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                                                                                         | 31,884            | 1.44 s                | 2.42 s                    |
-| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287                                                                           | 71,635            | 1.48 s                | 3.36 s                    |
-| `af21org` | [AlphaFold](https://alphafold.ebi.ac.uk) structures for 21 model organisms split into domains by [CATH-Assign](https://doi.org/10.1038/s42003-023-04488-9) | 338,258           | 2.15 s                | 7.88 s                    |
+| Name      | Description                                                                                                                                                                                | Number of domains | Search time (1 query)      | Search time (100 queries)  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- | -------------------------- | -------------------------- |
+| `scope95` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 95% seq ID                                                                                                      | 35,371            | 1.35 s                     | 2.81 s                     |
+| `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID                                                                                                      | 15,127            | 1.32 s                     | 2.36 s                     |
+| `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                                                                                                                         | 31,884            | 1.38 s                     | 2.79 s                     |
+| `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287                                                                                                           | 71,635            | 1.46 s                     | 3.82 s                     |
+| `af21org` | [AlphaFold](https://alphafold.ebi.ac.uk) structures for 21 model organisms split into domains by [CATH-Assign](https://doi.org/10.1038/s42003-023-04488-9)                                 | 338,258           | 2.21 s                     | 11.0 s                     |
+| `afted`   | [AlphaFold database](https://alphafold.ebi.ac.uk) structures split into domains by [TED](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) and clustered at 50% sequence identity | 53,344,209        | x                          | x                          |
 
 Search time is for a 150 residue protein (d1a6ja_ in PDB format) on an Intel i9-10980XE CPU with 256 GB RAM and PyTorch 1.11.
 Times are given for 1 or 100 queries.
+Note that `afted` uses exhaustive FAISS searching.
+This doesn't change the hits that are found, but the similarity score will differ a bit - see the paper.
 
 ## Pre-embed a dataset to search against
 
@@ -117,6 +118,10 @@ graph # Data(x=[150, 67], edge_index=[2, 2758], coords=[150, 3])
 embedding = pg.embed_structure("query.pdb")
 embedding.shape # torch.Size([128])
 
+# Load and reuse model for speed
+model = pg.load_trained_model()
+embedding = pg.embed_structure("query.pdb", model=model)
+
 # Embed Cα coordinates and search with the embedding
 # This is useful for using progres in existing pipelines that give out Cα coordinates
 # queryembeddings should have shape (128) or (n, 128)
@@ -131,11 +136,17 @@ score = pg.embedding_similarity(embedding, embedding)
 score # tensor(1.) in this case since they are the same embedding
 
 # Get all-v-all similarity scores between 1000 embeddings
-embs = torch.nn.functional.normalize(torch.rand(1000, 128), dim=1)
+embs = torch.nn.functional.normalize(torch.randn(1000, 128), dim=1)
 scores = pg.embedding_similarity(embs.unsqueeze(0), embs.unsqueeze(1))
 scores.shape # torch.Size([1000, 1000])
 ```
 
+## Scripts
+
+Datasets and scripts for benchmarking (including for other methods), FAISS index generation and training are in the `scripts` directory.
+
 ## Notes
 
 The implementation of the E(n)-equivariant GNN uses [EGNN PyTorch](https://github.com/lucidrains/egnn-pytorch).
+
+Please open issues or [get in touch](http://jgreener64.github.io) with any feedback.
