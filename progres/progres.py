@@ -9,9 +9,9 @@ from torch_scatter import scatter
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 from einops import rearrange
+import importlib.metadata
 from math import ceil
 import os
-import pkg_resources
 import sys
 from urllib import request
 
@@ -520,7 +520,7 @@ def progres_search_print(querystructure=None, querylist=None, queryembeddings=No
                          maxhits=default_maxhits, device="cpu", batch_size=None):
     generator = progres_search_generator(querystructure, querylist, queryembeddings, targetdb,
                                          fileformat, minsimilarity, maxhits, device, batch_size)
-    version = pkg_resources.get_distribution("progres").version
+    version = importlib.metadata.version("progres")
 
     for rd in generator:
         n_hits = len(rd["domains"])
