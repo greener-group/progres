@@ -351,7 +351,7 @@ def embed_structure(querystructure, fileformat="guess", device="cpu", model=None
 
 def get_batch_size(device="cpu", using_faiss=False):
     if using_faiss:
-        return 32
+        return 64
     else:
         return 8
 
