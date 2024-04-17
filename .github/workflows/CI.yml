@@ -27,8 +27,8 @@ jobs:
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
-    - name: Install PyTorch
-      run: conda install pytorch==1.12.0 -c pytorch
+    - name: Install PyTorch and FAISS
+      run: conda install pytorch==1.11 faiss-cpu -c pytorch
     - name: Install PyTorch Scatter and PyTorch Geometric
       run: conda install pytorch-scatter pyg -c pyg
     - name: Test install
@@ -57,8 +57,8 @@ jobs:
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
-    - name: Install PyTorch
-      run: conda install pytorch==1.12.0 -c pytorch
+    - name: Install PyTorch and FAISS
+      run: conda install pytorch==1.11 faiss-cpu -c pytorch
     - name: Install PyTorch Scatter and PyTorch Geometric
       run: conda install pytorch-scatter pyg -c pyg
     - name: Test install
