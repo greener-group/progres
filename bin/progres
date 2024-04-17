@@ -3,13 +3,13 @@
 # Argument handling
 
 import argparse
-import pkg_resources
+import importlib.metadata
 import sys
 
 parser = argparse.ArgumentParser(description=(
     "Fast protein structure searching using structure graph embeddings. "
     "See https://github.com/greener-group/progres for documentation and citation information. "
-    f"This is version {pkg_resources.get_distribution('progres').version} of the software."
+    f"This is version {importlib.metadata.version('progres')} of the software."
 ))
 subparsers = parser.add_subparsers(dest="mode",
     help="the mode to run progres in, run \"progres {mode} -h\" to see help for each")
