@@ -585,7 +585,7 @@ def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", b
     torch.save(
         {
             "ids"       : domids,
-            "embeddings": embeddings.cpu(),
+            "embeddings": embeddings.cpu().to(torch.float16),
             "nres"      : list(n_residues.cpu().numpy()),
             "notes"     : notes,
         },
