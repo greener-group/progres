@@ -7,8 +7,8 @@ This repository contains the method from the pre-print:
 Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224)
 
 It provides the `progres` Python package that lets you search structures against pre-embedded structural databases and pre-embed datasets for searching against.
-Searching typically takes 1-2 s and is faster for multiple queries.
-For the AlphaFold database, initial data loading takes around a minute but subsequent searching is less than a quarter of a second per query.
+Searching typically takes 1-2 s and is much faster for multiple queries.
+For the AlphaFold database, initial data loading takes around a minute but subsequent searching takes a tenth of a second per query.
 Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod), the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) and the [AlphaFold database TED domains](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) are provided for searching against.
 
 ## Installation
@@ -22,7 +22,7 @@ conda install pytorch-scatter pyg -c pyg
 
 1. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
 2. The first time you search with the software the trained model and pre-embedded databases (~220 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes.
-3. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded in a similar way. Make sure you have enough disk space!
+3. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded in a similar way. This can take a while. Make sure you have enough disk space!
 
 ## Usage
 
@@ -56,11 +56,11 @@ progres search -q query.pdb -t scope95
 - `-q` is the path to the query structure file. Alternatively, `-l` is a text file with one query file path per line and each result will be printed in turn. This is considerably faster for multiple queries since setup only occurs once and multiple workers can be used.
 - `-t` is the pre-embedded database to search against. Currently this must be either one of the databases listed below or the file path to a pre-embedded dataset generated with `progres embed`.
 - `-f` determines the file format of the query structure (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`). By default this is guessed from the file extension, with `pdb` chosen if a guess can't be made. `coords` refers to a text file with the coordinates of a Cα atom separated by white space on each line.
-- `-s` is the minimum similarity threshold above which to return hits, default 0.8.
+- `-s` is the minimum similarity threshold above which to return hits, default 0.8. As discussed in the paper, 0.8 indicates the same fold.
 - `-m` is the maximum number of hits to return, default 100.
 
 Query structures should be a single protein domain, though it can be discontinuous (chain IDs are ignored).
-Tools such as [Merizo](https://github.com/psipred/Merizo), [SWORD2](https://www.dsimb.inserm.fr/SWORD2) and [Chainsaw](https://github.com/JudeWells/chainsaw) can be used to predict domains from a structure.
+Tools such as [Merizo](https://github.com/psipred/Merizo), [SWORD2](https://www.dsimb.inserm.fr/SWORD2) and [Chainsaw](https://github.com/JudeWells/chainsaw) can be used to predict domains from a larger structure.
 You can also slice out domains manually using software such as the `pdb_selres` command from [pdb-tools](http://www.bonvinlab.org/pdb-tools).
 
 Interpreting the hit descriptions depends on the database being searched.
@@ -94,7 +94,7 @@ progres embed -l filepaths.txt -o searchdb.pt
 - `-f` determines the file format of each structure as above (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`).
 
 Again, the structures should correspond to single protein domains.
-The embeddings are stored as Float16, which has no effect on search performance.
+The embeddings are stored as Float16, which has no noticeable effect on search performance.
 
 ## Python library
 
@@ -121,7 +121,7 @@ graph # Data(x=[150, 67], edge_index=[2, 2758], coords=[150, 3])
 embedding = pg.embed_structure("query.pdb")
 embedding.shape # torch.Size([128])
 
-# Load and reuse model for speed
+# Load and reuse the model for speed
 model = pg.load_trained_model()
 embedding = pg.embed_structure("query.pdb", model=model)
 
