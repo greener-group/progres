@@ -23,7 +23,7 @@ parser_search.add_argument("-l", "--querylist",
     help="text file with one query file path per line")
 parser_search.add_argument("-t", "--targetdb", required=True,
     help=("pre-embedded database to search against, either "
-          "\"scope95\", \"scope40\", \"cath40\", \"ecod70\", \"af21org\" or a file path"))
+          "\"scope95\", \"scope40\", \"cath40\", \"ecod70\", \"af21org\", \"afted\" or a file path"))
 parser_search.add_argument("-f", "--fileformat",
     choices=["guess", "pdb", "mmcif", "mmtf", "coords"], default="guess",
     help="file format of the query structure(s), by default guessed from the file extension")
@@ -64,7 +64,7 @@ if args.mode == "search":
                              fileformat=args.fileformat, minsimilarity=args.minsimilarity,
                              maxhits=args.maxhits, device=args.device)
     else:
-        print("One of -q and -l must be given for structural searching", file=sys.stderr)
+        print("One of -q and -l must be given for structure searching", file=sys.stderr)
 elif args.mode == "embed":
     from progres import progres_embed
     progres_embed(structurelist=args.structurelist, outputfile=args.outputfile,
