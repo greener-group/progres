@@ -4,7 +4,7 @@
 
 This repository contains the method from the pre-print:
 
-Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224)
+- Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224)
 
 It provides the `progres` Python package that lets you search structures against pre-embedded structural databases and pre-embed datasets for searching against.
 Searching typically takes 1-2 s and is much faster for multiple queries.
@@ -13,16 +13,17 @@ Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD]
 
 ## Installation
 
-1. Python 3.7 or later is required. The software is OS-independent.
+1. Python 3.8 or later is required. The software is OS-independent.
 2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter), [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) and [FAISS](https://github.com/facebookresearch/faiss) as appropriate for your system. A GPU is not required and will only provide speedup in certain situations since multiple workers can be used on CPU. Example commands:
 ```bash
-conda install pytorch==1.12.0 faiss-cpu -c pytorch
+conda create -n prog python=3.9
+conda activate prog
+conda install pytorch=1.11 faiss-cpu -c pytorch
 conda install pytorch-scatter pyg -c pyg
 ```
-
-1. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
-2. The first time you search with the software the trained model and pre-embedded databases (~220 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes.
-3. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded in a similar way. This can take a while. Make sure you have enough disk space!
+3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
+4. The first time you search with the software the trained model and pre-embedded databases (~220 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes.
+5. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded in a similar way. This can take a while. Make sure you have enough disk space!
 
 ## Usage
 
