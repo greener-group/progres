@@ -60,10 +60,12 @@ progres search -q query.pdb -t scope95
 - `-m` is the maximum number of hits to return, default 100.
 
 Query structures should be a single protein domain, though it can be discontinuous (chain IDs are ignored).
-You can slice out domains manually using software such as the `pdb_selres` command from [pdb-tools](http://www.bonvinlab.org/pdb-tools).
+Tools such as [Merizo](https://github.com/psipred/Merizo), [SWORD2](https://www.dsimb.inserm.fr/SWORD2) and [Chainsaw](https://github.com/JudeWells/chainsaw) can be used to predict domains from a structure.
+You can also slice out domains manually using software such as the `pdb_selres` command from [pdb-tools](http://www.bonvinlab.org/pdb-tools).
 
 Interpreting the hit descriptions depends on the database being searched.
 The domain name often includes a reference to the corresponding PDB file, for example d1a6ja_ refers to PDB ID 1A6J chain A, and this can be opened in the [RCSB PDB structure view](https://www.rcsb.org/3d-view/1A6J/1) to get a quick look.
+For the AlphaFold database TED domains, files can be downloaded from [links such as this](https://alphafold.ebi.ac.uk/files/AF-A0A6J8EXE6-F1-model_v4.pdb) where `AF-A0A6J8EXE6-F1` is the first part of the hit notes and is followed by the residue range of the domain.
 
 The available pre-embedded databases are:
 
@@ -74,12 +76,12 @@ The available pre-embedded databases are:
 | `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                                                                                                                         | 31,884            | 1.38 s                     | 2.79 s                     |
 | `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287                                                                                                           | 71,635            | 1.46 s                     | 3.82 s                     |
 | `af21org` | [AlphaFold](https://alphafold.ebi.ac.uk) structures for 21 model organisms split into domains by [CATH-Assign](https://doi.org/10.1038/s42003-023-04488-9)                                 | 338,258           | 2.21 s                     | 11.0 s                     |
-| `afted`   | [AlphaFold database](https://alphafold.ebi.ac.uk) structures split into domains by [TED](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) and clustered at 50% sequence identity | 53,344,209        | 68.8 s                     | 77.1 s                     |
+| `afted`   | [AlphaFold database](https://alphafold.ebi.ac.uk) structures split into domains by [TED](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) and clustered at 50% sequence identity | 53,344,209        | 67.7 s                     | 73.1 s                     |
 
 Search time is for a 150 residue protein (d1a6ja_ in PDB format) on an Intel i9-10980XE CPU with 256 GB RAM and PyTorch 1.11.
 Times are given for 1 or 100 queries.
 Note that `afted` uses exhaustive FAISS searching.
-This doesn't change the hits that are found, but the similarity score will differ a bit - see the paper.
+This doesn't change the hits that are found, but the similarity score will differ by a small amount - see the paper.
 
 ## Pre-embed a dataset to search against
 
@@ -92,6 +94,7 @@ progres embed -l filepaths.txt -o searchdb.pt
 - `-f` determines the file format of each structure as above (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`).
 
 Again, the structures should correspond to single protein domains.
+The embeddings are stored as Float16, which has no effect on search performance.
 
 ## Python library
 
@@ -144,6 +147,7 @@ scores.shape # torch.Size([1000, 1000])
 ## Scripts
 
 Datasets and scripts for benchmarking (including for other methods), FAISS index generation and training are in the `scripts` directory.
+The trained model and pre-embedded databases are available on [Zenodo](https://zenodo.org/record/7782088).
 
 ## Notes
 
