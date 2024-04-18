@@ -49,25 +49,29 @@ parser_embed.add_argument("-d", "--device", default="cpu",
 
 args = parser.parse_args()
 
-if args.mode == "search":
-    from progres import progres_search_print
-    if args.minsimilarity < 0 or args.minsimilarity > 1:
-        raise argparse.ArgumentTypeError("minsimilarity must be between 0 and 1")
-    if args.maxhits < 1:
-        raise argparse.ArgumentTypeError("maxhits must be a positive integer")
-    if args.querystructure:
-        progres_search_print(querystructure=args.querystructure, targetdb=args.targetdb,
-                             fileformat=args.fileformat, minsimilarity=args.minsimilarity,
-                             maxhits=args.maxhits, device=args.device)
-    elif args.querylist:
-        progres_search_print(querylist=args.querylist, targetdb=args.targetdb,
-                             fileformat=args.fileformat, minsimilarity=args.minsimilarity,
-                             maxhits=args.maxhits, device=args.device)
+def main():
+    if args.mode == "search":
+        from progres import progres_search_print
+        if args.minsimilarity < 0 or args.minsimilarity > 1:
+            raise argparse.ArgumentTypeError("minsimilarity must be between 0 and 1")
+        if args.maxhits < 1:
+            raise argparse.ArgumentTypeError("maxhits must be a positive integer")
+        if args.querystructure:
+            progres_search_print(querystructure=args.querystructure, targetdb=args.targetdb,
+                                fileformat=args.fileformat, minsimilarity=args.minsimilarity,
+                                maxhits=args.maxhits, device=args.device)
+        elif args.querylist:
+            progres_search_print(querylist=args.querylist, targetdb=args.targetdb,
+                                fileformat=args.fileformat, minsimilarity=args.minsimilarity,
+                                maxhits=args.maxhits, device=args.device)
+        else:
+            print("One of -q and -l must be given for structure searching", file=sys.stderr)
+    elif args.mode == "embed":
+        from progres import progres_embed
+        progres_embed(structurelist=args.structurelist, outputfile=args.outputfile,
+                    fileformat=args.fileformat, device=args.device)
     else:
-        print("One of -q and -l must be given for structure searching", file=sys.stderr)
-elif args.mode == "embed":
-    from progres import progres_embed
-    progres_embed(structurelist=args.structurelist, outputfile=args.outputfile,
-                  fileformat=args.fileformat, device=args.device)
-else:
-    print("No mode selected, run \"progres -h\" to see help", file=sys.stderr)
+        print("No mode selected, run \"progres -h\" to see help", file=sys.stderr)
+
+if __name__ == "__main__":
+    main()
