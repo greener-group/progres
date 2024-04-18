@@ -506,6 +506,10 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
                 }
                 qi += 1
 
+                if device != "cpu" and search_type == "torch":
+                    del dists
+                    torch.cuda.empty_cache()
+
                 yield result_dict
 
 def progres_search(querystructure=None, querylist=None, queryembeddings=None, targetdb=None,

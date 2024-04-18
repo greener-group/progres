@@ -14,7 +14,7 @@ Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD]
 ## Installation
 
 1. Python 3.8 or later is required. The software is OS-independent.
-2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter), [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) and [FAISS](https://github.com/facebookresearch/faiss) as appropriate for your system. A GPU is not required and will only provide speedup in certain situations since multiple workers can be used on CPU. Example commands:
+2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter), [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) and [FAISS](https://github.com/facebookresearch/faiss) as appropriate for your system. A GPU is not required but may provide speedup in certain situations. Example commands:
 ```bash
 conda create -n prog python=3.9
 conda activate prog
@@ -32,7 +32,7 @@ On Windows you can call the `bin/progres` script with python if you can't access
 
 Run `progres -h` to see the help text and `progres {mode} -h` to see the help text for each mode.
 The modes are described below but there are other options outlined in the help text.
-For example the `-d` flag sets the device to run on; this is `cpu` by default since this is usually fastest for searching, but `cuda` may be slightly faster when embedding a dataset.
+For example the `-d` flag sets the device to run on; this is `cpu` by default since this is often fastest for searching, but `cuda` may be faster when searching many queries or embedding a dataset.
 
 ## Searching a structure against a database
 
