@@ -388,7 +388,7 @@ def download_data_if_required(download_afted=False):
                       sep="", file=sys.stderr)
                 printed = True
             if not printed:
-                print("Downloading data as first time setup (~220 MB) to ", progres_dir,
+                print("Downloading data as first time setup (~220 MB) to ", database_dir,
                       ", internet connection required, this can take a few minutes",
                       sep="", file=sys.stderr)
                 printed = True
