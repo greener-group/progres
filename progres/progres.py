@@ -40,6 +40,11 @@ trained_model_dir = os.path.join(data_dir, "trained_models", trained_model_subdi
 database_dir      = os.path.join(data_dir, "databases"     , database_subdir     )
 trained_model_fp  = os.path.join(trained_model_dir, "trained_model.pt")
 
+dirs_that_should_exist = [data_dir, trained_model_dir, database_dir]
+for dir in dirs_that_should_exist:
+    os.makedirs(dir, exist_ok=True)    
+
+
 class SinusoidalPositionalEncoding(torch.nn.Module):
     def __init__(self, channels):
         super().__init__()
