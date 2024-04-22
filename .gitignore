@@ -4,3 +4,5 @@ build
 dist
 progres/trained_models/v*
 progres/databases/v*
+.vs
+.vscode
