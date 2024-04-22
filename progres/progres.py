@@ -34,9 +34,16 @@ zenodo_record = "10975201" # This only needs to change when the trained model or
 trained_model_subdir = "v_0_2_0" # This only needs to change when the trained model changes
 database_subdir      = "v_0_2_1" # This only needs to change when the databases change
 progres_dir       = os.path.dirname(os.path.realpath(__file__))
-trained_model_dir = os.path.join(progres_dir, "trained_models", trained_model_subdir)
-database_dir      = os.path.join(progres_dir, "databases"     , database_subdir     )
+# allow data dir to be set from env var if exists, otherwise default to software location
+data_dir          = os.getenv('PROGRES_DATA_DIR', default=progres_dir)
+trained_model_dir = os.path.join(data_dir, "trained_models", trained_model_subdir)
+database_dir      = os.path.join(data_dir, "databases"     , database_subdir     )
 trained_model_fp  = os.path.join(trained_model_dir, "trained_model.pt")
+
+dirs_that_should_exist = [data_dir, trained_model_dir, database_dir]
+for dir in dirs_that_should_exist:
+    os.makedirs(dir, exist_ok=True)    
+
 
 class SinusoidalPositionalEncoding(torch.nn.Module):
     def __init__(self, channels):
@@ -388,7 +395,7 @@ def download_data_if_required(download_afted=False):
                       sep="", file=sys.stderr)
                 printed = True
             if not printed:
-                print("Downloading data as first time setup (~220 MB) to ", progres_dir,
+                print("Downloading data as first time setup (~220 MB) to ", database_dir,
                       ", internet connection required, this can take a few minutes",
                       sep="", file=sys.stderr)
                 printed = True
