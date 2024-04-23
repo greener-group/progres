@@ -54,5 +54,3 @@ COPY "docker/docker_runner.sh" ${RUN_SCRIPT}
 RUN chmod +rx ${RUN_SCRIPT}
 
 ENTRYPOINT [ "/pub/run.sh" ]
-
-
