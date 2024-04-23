@@ -22,8 +22,10 @@ conda install pytorch=1.11 faiss-cpu -c pytorch
 conda install pytorch-scatter pyg -c pyg
 ```
 3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
-4. The first time you search with the software the trained model and pre-embedded databases (~220 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes.
-5. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded in a similar way. This can take a while. Make sure you have enough disk space!
+4. The first time you search with the software the trained model and pre-embedded databases (~220 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes. You can set the environmental variable `PROGRES_DATA_DIR` to change where this data is stored, for example if you cannot write to the package directory. Remember to keep it set the next time you run Progres.
+5. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded similarly. This can take a while. Make sure you have enough disk space!
+
+Alternatively, a Docker file is available in the `docker` directory.
 
 ## Usage
 
@@ -155,3 +157,4 @@ The trained model and pre-embedded databases are available on [Zenodo](https://z
 The implementation of the E(n)-equivariant GNN uses [EGNN PyTorch](https://github.com/lucidrains/egnn-pytorch).
 
 Please open issues or [get in touch](http://jgreener64.github.io) with any feedback.
+Contributions via pull requests are welcome.
