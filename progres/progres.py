@@ -382,7 +382,7 @@ def download_data_if_required(download_afted=False):
 
     printed = False
     for fp, url in zip(fps, urls):
-        if not os.path.isfile(fp):
+        if not os.path.isfile(fp + ".okay") or not os.path.isfile(fp):
             if fp.endswith("afted.index"):
                 print("Downloading afted data as first time setup (~33 GB) to ", database_dir,
                       ", internet connection required, this may take a while",
@@ -394,13 +394,25 @@ def download_data_if_required(download_afted=False):
                       sep="", file=sys.stderr)
                 printed = True
             try:
+                if os.path.isfile(fp):
+                    print("Removing ", fp,
+                          ", which may be an incomplete download, and downloading again",
+                          sep="", file=sys.stderr)
+                    os.remove(fp)
                 request.urlretrieve(url, fp)
-                if not fp.endswith("afted.index"):
+                # Check download seems okay and indicate this with a file
+                if fp.endswith("afted.index"):
+                    import faiss
+                    faiss.read_index(fp)
+                else:
                     d = torch.load(fp, map_location="cpu")
                     if fp == trained_model_fp:
                         assert "model" in d
                     else:
                         assert "notes" in d
+                        assert len(d["notes"]) > 10
+                with open(fp + ".okay", "w") as of:
+                    pass
             except:
                 if os.path.isfile(fp):
                     os.remove(fp)
