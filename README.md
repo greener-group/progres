@@ -6,7 +6,7 @@ This repository contains the method from the pre-print:
 
 - Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224)
 
-It provides the `progres` Python package that lets you search structures against pre-embedded structural databases and pre-embed datasets for searching against.
+It provides the `progres` Python package that lets you search structures against pre-embedded structural databases, score pairs of structures and pre-embed datasets for searching against.
 Searching typically takes 1-2 s and is much faster for multiple queries.
 For the AlphaFold database, initial data loading takes around a minute but subsequent searching takes a tenth of a second per query.
 Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod), the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) and the [AlphaFold database TED domains](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) are provided for searching against.
@@ -36,7 +36,7 @@ Run `progres -h` to see the help text and `progres {mode} -h` to see the help te
 The modes are described below but there are other options outlined in the help text.
 For example the `-d` flag sets the device to run on; this is `cpu` by default since this is often fastest for searching, but `cuda` may be faster when searching many queries or embedding a dataset.
 
-## Searching a structure against a database
+## Search a structure against a database
 
 To search a PDB file `query.pdb` against domains in the SCOPe database and print output:
 ```bash
@@ -86,6 +86,20 @@ Times are given for 1 or 100 queries.
 Note that `afted` uses exhaustive FAISS searching.
 This doesn't change the hits that are found, but the similarity score will differ by a small amount - see the paper.
 
+## Calculate the score between two structures
+
+To calculate the Progres score between two protein domains:
+```bash
+progres score struc_1.pdb struc_2.pdb
+```
+```
+0.7265280485153198
+```
+- `-f` and `-g` determine the file format for the first and second structures as above (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`).
+
+The order of the domains does not affect the score.
+A score of 0.8 or higher indicates the same fold.
+
 ## Pre-embed a dataset to search against
 
 To embed a dataset of structures, allowing it to be searched against:
@@ -110,6 +124,9 @@ import progres as pg
 results = pg.progres_search(querystructure="query.pdb", targetdb="scope95")
 results[0].keys() # dict_keys(['query_num', 'query', 'query_size', 'database', 'minsimilarity',
                   #            'maxhits', 'domains', 'hits_nres', 'similarities', 'notes'])
+
+# Score as above, returns a float (similarity score 0 to 1)
+pg.progres_score("struc_1.pdb", "struc_2.pdb")
 
 # Pre-embed as above, saves a dictionary
 pg.progres_embed(structurelist="filepaths.txt", outputfile="searchdb.pt")

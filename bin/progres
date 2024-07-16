@@ -34,6 +34,26 @@ parser_search.add_argument("-m", "--maxhits", type=int, default=100,
 parser_search.add_argument("-d", "--device", default="cpu",
     help="device to run on, default is \"cpu\"")
 
+parser_score = subparsers.add_parser("score",
+    description=(
+        "Calculate the Progres score between two protein domains. "
+        "The order of the domains does not affect the score. "
+        "A score of 0.8 or higher indicates the same fold."
+    ),
+    help="calculate the Progres score between two protein domains")
+parser_score.add_argument("structure1",
+    help="first structure file in PDB/mmCIF/MMTF/coordinate format")
+parser_score.add_argument("structure2",
+    help="second structure file in PDB/mmCIF/MMTF/coordinate format")
+parser_score.add_argument("-f", "--fileformat1",
+    choices=["guess", "pdb", "mmcif", "mmtf", "coords"], default="guess",
+    help="file format of the first structure, by default guessed from the file extension")
+parser_score.add_argument("-g", "--fileformat2",
+    choices=["guess", "pdb", "mmcif", "mmtf", "coords"], default="guess",
+    help="file format of the second structure, by default guessed from the file extension")
+parser_score.add_argument("-d", "--device", default="cpu",
+    help="device to run on, default is \"cpu\"")
+
 parser_embed = subparsers.add_parser("embed",
     description="Embed a dataset of structures to allow it to be searched against.",
     help="embed a dataset of structures to allow it to be searched against")
@@ -58,18 +78,23 @@ def main():
             raise argparse.ArgumentTypeError("maxhits must be a positive integer")
         if args.querystructure:
             progres_search_print(querystructure=args.querystructure, targetdb=args.targetdb,
-                                fileformat=args.fileformat, minsimilarity=args.minsimilarity,
-                                maxhits=args.maxhits, device=args.device)
+                                 fileformat=args.fileformat, minsimilarity=args.minsimilarity,
+                                 maxhits=args.maxhits, device=args.device)
         elif args.querylist:
             progres_search_print(querylist=args.querylist, targetdb=args.targetdb,
-                                fileformat=args.fileformat, minsimilarity=args.minsimilarity,
-                                maxhits=args.maxhits, device=args.device)
+                                 fileformat=args.fileformat, minsimilarity=args.minsimilarity,
+                                 maxhits=args.maxhits, device=args.device)
         else:
             print("One of -q and -l must be given for structure searching", file=sys.stderr)
+    elif args.mode == "score":
+        from progres import progres_score_print
+        progres_score_print(structure1=args.structure1, structure2=args.structure2,
+                            fileformat1=args.fileformat1, fileformat2=args.fileformat2,
+                            device=args.device)
     elif args.mode == "embed":
         from progres import progres_embed
         progres_embed(structurelist=args.structurelist, outputfile=args.outputfile,
-                    fileformat=args.fileformat, device=args.device)
+                      fileformat=args.fileformat, device=args.device)
     else:
         print("No mode selected, run \"progres -h\" to see help", file=sys.stderr)
 

@@ -571,6 +571,19 @@ def progres_search_print(querystructure=None, querylist=None, queryembeddings=No
             ]))
         print()
 
+def progres_score(structure1, structure2, fileformat1="guess", fileformat2="guess", device="cpu"):
+    download_data_if_required()
+    model = load_trained_model(device)
+    embedding1 = embed_structure(structure1, fileformat=fileformat1, device=device, model=model)
+    embedding2 = embed_structure(structure2, fileformat=fileformat2, device=device, model=model)
+    score = embedding_similarity(embedding1, embedding2)
+    return score.item()
+
+def progres_score_print(structure1, structure2, fileformat1="guess",
+                        fileformat2="guess", device="cpu"):
+    score = progres_score(structure1, structure2, fileformat1, fileformat2, device)
+    print(score)
+
 def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", batch_size=None):
     download_data_if_required()
 
