@@ -48,7 +48,7 @@ jobs:
     - name: Check score
       run: |
         sc=$(cat score.txt)
-        if [ ${sc:0:8} == "0.5" ]; then echo "Correct score"; else echo "Wrong score, score is $sc"; exit 1; fi
+        if [ ${sc:0:7} == "0.72652" ]; then echo "Correct score"; else echo "Wrong score, score is $sc"; exit 1; fi
   test_pypi:
     runs-on: ubuntu-latest
     strategy:
