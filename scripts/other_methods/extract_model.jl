@@ -13,6 +13,6 @@ for (fi, f) in enumerate(fs)
     f in known_problems && continue
     out_fp = joinpath(out_dir, f)
     isfile(out_fp) && continue
-    s = read(joinpath(in_dir, f), PDB)
+    s = read(joinpath(in_dir, f), PDBFormat)
     writepdb(out_fp, s[1])
 end
