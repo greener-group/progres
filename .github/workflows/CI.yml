@@ -75,7 +75,15 @@ jobs:
       run: time progres -h
     - name: Test import
       run: time python -c "import progres"
-    - name: Download structure
-      run: wget https://files.rcsb.org/view/1CRN.pdb
+    - name: Download structures
+      run: |
+        wget https://files.rcsb.org/view/1CRN.pdb
+        wget https://files.rcsb.org/view/1SSU.cif
     - name: Test search
       run: time progres search -q 1CRN.pdb -t scope95
+    - name: Test score
+      run: time progres score 1CRN.pdb 1SSU.cif > score.txt
+    - name: Check score
+      run: |
+        sc=$(cat score.txt)
+        if [ ${sc:0:7} == "0.72652" ]; then echo "Correct score"; else echo "Wrong score, score is $sc"; exit 1; fi
