@@ -47,7 +47,7 @@ progres search -q query.pdb -t scope95
 # QUERY: query.pdb
 # QUERY_SIZE: 150 residues
 # DATABASE: scope95
-# PARAMETERS: minsimilarity 0.8, maxhits 100, progres v0.2.3
+# PARAMETERS: minsimilarity 0.8, maxhits 100, progres v0.2.4
 # HIT_N  DOMAIN   HIT_NRES  SIMILARITY  NOTES
       1  d1a6ja_       150      1.0000  d.112.1.1 - Nitrogen regulatory bacterial protein IIa-ntr {Escherichia coli [TaxId: 562]}
       2  d2a0ja_       146      0.9988  d.112.1.0 - automated matches {Neisseria meningitidis [TaxId: 122586]}
