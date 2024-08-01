@@ -436,15 +436,17 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
     if targetdb in pre_embedded_dbs_faiss:
         import faiss
         print(f"Loading {targetdb} data, this can take a minute", file=sys.stderr)
-        target_index = faiss.read_index(os.path.join(database_dir, f"{targetdb}.index"))
         target_data = torch.load(os.path.join(database_dir, f"{targetdb}_noembs.pt"), map_location=device)
+        target_index = faiss.read_index(os.path.join(database_dir, f"{targetdb}.index"))
         search_type = "faiss"
     elif targetdb in pre_embedded_dbs:
         target_fp = os.path.join(database_dir, targetdb + ".pt")
         target_data = torch.load(target_fp, map_location=device)
+        target_index = None
         search_type = "torch"
     else:
         target_data = torch.load(targetdb, map_location=device)
+        target_index = None
         search_type = "torch"
 
     model = load_trained_model(device)
@@ -473,6 +475,12 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
         num_workers=num_workers,
     )
 
+    return search_generator_inner(data_loader, query_fps, targetdb, target_data, target_index,
+                                  search_type, minsimilarity, maxhits, device)
+
+def search_generator_inner(data_loader, query_fps, targetdb, target_data, target_index,
+                           search_type, minsimilarity=default_minsimilarity,
+                           maxhits=default_maxhits, device="cpu"):
     with torch.no_grad():
         qi = 0
         for embs, nress in data_loader:
