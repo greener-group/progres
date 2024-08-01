@@ -221,7 +221,7 @@ class StructureDataset(Dataset):
             self.file_paths = file_paths
             self.query_nums = list(range(1, len(file_paths) + 1))
             self.domain_nums = [1] * len(file_paths)
-            self.res_ranges = [None] * len(file_paths)
+            self.res_ranges = ["all"] * len(file_paths)
 
         self.fileformat = fileformat
         self.model = model
@@ -233,10 +233,8 @@ class StructureDataset(Dataset):
     def __getitem__(self, idx):
         graph = read_graph(self.file_paths[idx], self.fileformat, self.res_ranges[idx])
         emb = self.model(graph.to(self.device)).squeeze(0)
-        nres = torch.tensor([graph.num_nodes], device=self.device)
-        query_num = torch.tensor([self.query_nums[idx]], device=self.device)
-        domain_num = torch.tensor([self.domain_nums[idx]], device=self.device)
-        return emb, nres, query_num, domain_num
+        nres = graph.num_nodes
+        return emb, nres, self.query_nums[idx], self.domain_nums[idx], self.res_ranges[idx]
 
 class EmbeddingDataset(Dataset):
     def __init__(self, embeddings):
@@ -255,10 +253,10 @@ class EmbeddingDataset(Dataset):
 
     def __getitem__(self, idx):
         emb = self.embeddings[idx]
-        nres = "?"
+        nres, res_range = "?", "?"
         query_num = idx + 1
         domain_num = 1
-        return emb, nres, query_num, domain_num
+        return emb, nres, query_num, domain_num, res_range
 
 def read_coords(fp, fileformat="guess", res_range=None):
     if fileformat == "guess":
@@ -527,7 +525,7 @@ def search_generator_inner(data_loader, query_fps, targetdb, target_data, target
                            search_type, minsimilarity=default_minsimilarity,
                            maxhits=default_maxhits, device="cpu"):
     with torch.no_grad():
-        for embs, nress, query_nums, domain_nums in data_loader:
+        for embs, nress, query_nums, domain_nums, res_ranges in data_loader:
             if search_type == "faiss":
                 sims_ord_batch, inds_ord_batch = target_index.search(embs.cpu().numpy(), maxhits)
 
@@ -562,7 +560,8 @@ def search_generator_inner(data_loader, query_fps, targetdb, target_data, target
                     "query_num":     query_num,
                     "query":         query_fps[query_num - 1],
                     "domain_num":    domain_nums[bi].item(),
-                    "domain_size":   nress[bi].item() if type(nress) == torch.Tensor else "?",
+                    "domain_size":   nress[bi].item() if type(nress) == torch.Tensor else nress[bi],
+                    "res_range":     res_ranges[bi],
                     "database":      targetdb,
                     "minsimilarity": minsimilarity,
                     "maxhits":       maxhits,
@@ -601,13 +600,14 @@ def progres_search_print(querystructure=None, querylist=None, queryembeddings=No
         padding_inds      = max(len(s) for s in inds_str        + ["# HIT_N" ])
         padding_domids    = max(len(s) for s in rd["domains"]   + ["DOMAIN"  ])
         padding_hits_nres = max(len(s) for s in hits_nres_str   + ["HIT_NRES"])
+        res_range_str = f"1-{rd['domain_size']}" if rd["res_range"] == "all" else rd["res_range"]
         chainsaw_str = "yes" if chainsaw else "no"
         faiss_str = "yes" if targetdb in pre_embedded_dbs_faiss else "no"
 
         print("# QUERY_NUM:"  , rd["query_num"])
         print("# QUERY:"      , rd["query"])
         print("# DOMAIN_NUM:" , rd["domain_num"])
-        print("# DOMAIN_SIZE:", rd["domain_size"], "residues")
+        print("# DOMAIN_SIZE:", rd["domain_size"], "residues", "(" + res_range_str + ")")
         print("# DATABASE:", targetdb)
         print(f"# PARAMETERS: minsimilarity {minsimilarity}, maxhits {maxhits}, " +
               f"chainsaw {chainsaw_str}, faiss {faiss_str}, progres v{version}")
@@ -666,7 +666,7 @@ def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", b
     with torch.no_grad():
         embeddings = torch.zeros(len(data_set), embedding_size, device=device)
         n_residues = torch.zeros(len(data_set), dtype=torch.int, device=device)
-        for bi, (embs, nress, _, _) in enumerate(data_loader):
+        for bi, (embs, nress, _, _, _) in enumerate(data_loader):
             embeddings[(bi * batch_size):(bi * batch_size + embs.size(0))] = embs
             n_residues[(bi * batch_size):(bi * batch_size + embs.size(0))] = nress.squeeze(1)
 
