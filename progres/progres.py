@@ -15,6 +15,8 @@ import os
 import sys
 from urllib import request
 
+from .chainsaw.get_predictions import predict_domains
+
 n_layers = 6
 embedding_size = 128
 hidden_dim = 128
@@ -198,8 +200,29 @@ class Model(torch.nn.Module):
 
 # Running the model in  __getitem__ allows multiple workers to be used on CPU
 class StructureDataset(Dataset):
-    def __init__(self, file_paths, fileformat, model, device):
-        self.file_paths = file_paths
+    def __init__(self, file_paths, fileformat, model, device, chainsaw=False):
+        if chainsaw:
+            fps_doms, query_nums, domain_nums, res_ranges = [], [], [], []
+            for qi, fp in enumerate(file_paths):
+                file_ext = os.path.splitext(fp)[1].lower()
+                if fileformat == "mmtf" or (fileformat == "guess" and file_ext == ".mmtf"):
+                    raise ValueError("Chainsaw domain splitting is not compatible with MMTF files")
+                rrs = predict_domains(fp)
+                for di, rr in enumerate(rrs.split(",")):
+                    fps_doms.append(fp)
+                    query_nums.append(qi + 1)
+                    domain_nums.append(di + 1)
+                    res_ranges.append(rr)
+            self.file_paths = fps_doms
+            self.query_nums = query_nums
+            self.domain_nums = domain_nums
+            self.res_ranges = res_ranges
+        else:
+            self.file_paths = file_paths
+            self.query_nums = list(range(1, len(file_paths) + 1))
+            self.domain_nums = [1] * len(file_paths)
+            self.res_ranges = [None] * len(file_paths)
+
         self.fileformat = fileformat
         self.model = model
         self.device = device
@@ -208,10 +231,12 @@ class StructureDataset(Dataset):
         return len(self.file_paths)
 
     def __getitem__(self, idx):
-        graph = read_graph(self.file_paths[idx], self.fileformat)
+        graph = read_graph(self.file_paths[idx], self.fileformat, self.res_ranges[idx])
         emb = self.model(graph.to(self.device)).squeeze(0)
         nres = torch.tensor([graph.num_nodes], device=self.device)
-        return emb, nres
+        query_num = torch.tensor([self.query_nums[idx]], device=self.device)
+        domain_num = torch.tensor([self.domain_nums[idx]], device=self.device)
+        return emb, nres, query_num, domain_num
 
 class EmbeddingDataset(Dataset):
     def __init__(self, embeddings):
@@ -231,9 +256,11 @@ class EmbeddingDataset(Dataset):
     def __getitem__(self, idx):
         emb = self.embeddings[idx]
         nres = "?"
-        return emb, nres
+        query_num = idx + 1
+        domain_num = 1
+        return emb, nres, query_num, domain_num
 
-def read_coords(fp, fileformat="guess"):
+def read_coords(fp, fileformat="guess", res_range=None):
     if fileformat == "guess":
         chosen_format = "pdb"
         file_ext = os.path.splitext(fp)[1].lower()
@@ -244,12 +271,23 @@ def read_coords(fp, fileformat="guess"):
     else:
         chosen_format = fileformat
 
+    if res_range is None:
+        domain_res = None
+    else:
+        domain_res = []
+        for rr in res_range.split("_"):
+            res_start, res_end = rr.split("-")
+            domain_res.extend(range(int(res_start), int(res_end) + 1))
+
     coords = []
     if chosen_format == "pdb":
         with open(fp) as f:
+            c = 0
             for line in f.readlines():
                 if (line.startswith("ATOM  ") or line.startswith("HETATM")) and line[12:16].strip() == "CA":
-                    coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
+                    c += 1
+                    if domain_res is None or c in domain_res:
+                        coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                 elif line.startswith("ENDMDL"):
                     break
     elif chosen_format == "mmcif" or chosen_format == "mmtf":
@@ -260,16 +298,22 @@ def read_coords(fp, fileformat="guess"):
         else:
             from Bio.PDB.mmtf import MMTFParser
             struc = MMTFParser.get_structure(fp)
+        c = 0
         for model in struc:
             for atom in model.get_atoms():
                 if atom.get_name() == "CA":
-                    cs = atom.get_coord()
-                    coords.append([float(cs[0]), float(cs[1]), float(cs[2])])
+                    c += 1
+                    if domain_res is None or c in domain_res:
+                        cs = atom.get_coord()
+                        coords.append([float(cs[0]), float(cs[1]), float(cs[2])])
             break
     elif chosen_format == "coords":
         with open(fp) as f:
+            c = 0
             for line in f.readlines():
-                coords.append([float(v) for v in line.rstrip().split()])
+                c += 1
+                if domain_res is None or c in domain_res:
+                    coords.append([float(v) for v in line.rstrip().split()])
     else:
         raise ValueError("fileformat must be \"guess\", \"pdb\", \"mmcif\", \"mmtf\" or \"coords\"")
     return coords
@@ -314,8 +358,8 @@ def coords_to_graph(coords):
     data = Data(x=x, edge_index=edge_index, coords=coords)
     return data
 
-def read_graph(fp, fileformat="guess"):
-    coords = read_coords(fp, fileformat)
+def read_graph(fp, fileformat="guess", res_range=None):
+    coords = read_coords(fp, fileformat, res_range)
     return coords_to_graph(coords)
 
 def embedding_distance(emb_1, emb_2):
@@ -347,8 +391,8 @@ def embed_coords(coords, device="cpu", model=None):
     graph = coords_to_graph(coords)
     return embed_graph(graph, device, model)
 
-def embed_structure(querystructure, fileformat="guess", device="cpu", model=None):
-    graph = read_graph(querystructure, fileformat)
+def embed_structure(querystructure, fileformat="guess", res_range=None, device="cpu", model=None):
+    graph = read_graph(querystructure, fileformat, res_range)
     return embed_graph(graph, device, model)
 
 def get_batch_size(device="cpu", using_faiss=False):
@@ -425,7 +469,8 @@ def download_data_if_required(download_afted=False):
 
 def progres_search_generator(querystructure=None, querylist=None, queryembeddings=None,
                              targetdb=None, fileformat="guess", minsimilarity=default_minsimilarity,
-                             maxhits=default_maxhits, device="cpu", batch_size=None):
+                             maxhits=default_maxhits, chainsaw=False, device="cpu",
+                             batch_size=None):
     if querystructure is None and querylist is None and queryembeddings is None:
         raise ValueError("One of querystructure, querylist or queryembeddings must be given")
     if targetdb is None:
@@ -452,14 +497,14 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
     model = load_trained_model(device)
     if querystructure is not None:
         query_fps = [querystructure]
-        data_set = StructureDataset(query_fps, fileformat, model, device)
+        data_set = StructureDataset(query_fps, fileformat, model, device, chainsaw)
         num_workers = get_num_workers(device)
     elif querylist is not None:
         query_fps = []
         with open(querylist) as f:
             for line in f.readlines():
                 query_fps.append(line.rstrip())
-        data_set = StructureDataset(query_fps, fileformat, model, device)
+        data_set = StructureDataset(query_fps, fileformat, model, device, chainsaw)
         num_workers = get_num_workers(device)
     else:
         data_set = EmbeddingDataset(queryembeddings.to(device))
@@ -482,13 +527,11 @@ def search_generator_inner(data_loader, query_fps, targetdb, target_data, target
                            search_type, minsimilarity=default_minsimilarity,
                            maxhits=default_maxhits, device="cpu"):
     with torch.no_grad():
-        qi = 0
-        for embs, nress in data_loader:
+        for embs, nress, query_nums, domain_nums in data_loader:
             if search_type == "faiss":
                 sims_ord_batch, inds_ord_batch = target_index.search(embs.cpu().numpy(), maxhits)
 
             for bi in range(embs.size(0)):
-                query_size = nress[bi].item() if type(nress) == torch.Tensor else "?"
                 if search_type == "faiss":
                     sims_ord = sims_ord_batch[bi]
                     inds_ord = inds_ord_batch[bi]
@@ -514,10 +557,12 @@ def search_generator_inner(data_loader, query_fps, targetdb, target_data, target
                         similarities.append(similarity)
                         notes.append(target_data["notes"][i])
 
+                query_num = query_nums[bi].item()
                 result_dict = {
-                    "query_num":     qi + 1,
-                    "query":         query_fps[qi],
-                    "query_size":    query_size,
+                    "query_num":     query_num,
+                    "query":         query_fps[query_num - 1],
+                    "domain_num":    domain_nums[bi].item(),
+                    "domain_size":   nress[bi].item() if type(nress) == torch.Tensor else "?",
                     "database":      targetdb,
                     "minsimilarity": minsimilarity,
                     "maxhits":       maxhits,
@@ -526,7 +571,6 @@ def search_generator_inner(data_loader, query_fps, targetdb, target_data, target
                     "similarities":  similarities,
                     "notes":         notes,
                 }
-                qi += 1
 
                 if device != "cpu" and search_type == "torch":
                     del dists
@@ -536,16 +580,18 @@ def search_generator_inner(data_loader, query_fps, targetdb, target_data, target
 
 def progres_search(querystructure=None, querylist=None, queryembeddings=None, targetdb=None,
                    fileformat="guess", minsimilarity=default_minsimilarity, maxhits=default_maxhits,
-                   device="cpu", batch_size=None):
+                   chainsaw=False, device="cpu", batch_size=None):
     generator = progres_search_generator(querystructure, querylist, queryembeddings, targetdb,
-                                         fileformat, minsimilarity, maxhits, device, batch_size)
+                                         fileformat, minsimilarity, maxhits, chainsaw, device,
+                                         batch_size)
     return list(generator)
 
 def progres_search_print(querystructure=None, querylist=None, queryembeddings=None, targetdb=None,
                          fileformat="guess", minsimilarity=default_minsimilarity,
-                         maxhits=default_maxhits, device="cpu", batch_size=None):
+                         maxhits=default_maxhits, chainsaw=False, device="cpu", batch_size=None):
     generator = progres_search_generator(querystructure, querylist, queryembeddings, targetdb,
-                                         fileformat, minsimilarity, maxhits, device, batch_size)
+                                         fileformat, minsimilarity, maxhits, chainsaw, device,
+                                         batch_size)
     version = importlib.metadata.version("progres")
 
     for rd in generator:
@@ -555,13 +601,16 @@ def progres_search_print(querystructure=None, querylist=None, queryembeddings=No
         padding_inds      = max(len(s) for s in inds_str        + ["# HIT_N" ])
         padding_domids    = max(len(s) for s in rd["domains"]   + ["DOMAIN"  ])
         padding_hits_nres = max(len(s) for s in hits_nres_str   + ["HIT_NRES"])
-        faiss_str = ", FAISS search" if targetdb in pre_embedded_dbs_faiss else ""
+        chainsaw_str = "yes" if chainsaw else "no"
+        faiss_str = "yes" if targetdb in pre_embedded_dbs_faiss else "no"
 
-        print("# QUERY_NUM:" , rd["query_num"])
-        print("# QUERY:"     , rd["query"])
-        print("# QUERY_SIZE:", rd["query_size"], "residues")
+        print("# QUERY_NUM:"  , rd["query_num"])
+        print("# QUERY:"      , rd["query"])
+        print("# DOMAIN_NUM:" , rd["domain_num"])
+        print("# DOMAIN_SIZE:", rd["domain_size"], "residues")
         print("# DATABASE:", targetdb)
-        print(f"# PARAMETERS: minsimilarity {minsimilarity}, maxhits {maxhits}, progres v{version}{faiss_str}")
+        print(f"# PARAMETERS: minsimilarity {minsimilarity}, maxhits {maxhits}, " +
+              f"chainsaw {chainsaw_str}, faiss {faiss_str}, progres v{version}")
         print("  ".join([
             "#" + " HIT_N".rjust(padding_inds - 1),
             "DOMAIN".ljust(padding_domids),
@@ -617,7 +666,7 @@ def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", b
     with torch.no_grad():
         embeddings = torch.zeros(len(data_set), embedding_size, device=device)
         n_residues = torch.zeros(len(data_set), dtype=torch.int, device=device)
-        for bi, (embs, nress) in enumerate(data_loader):
+        for bi, (embs, nress, _, _) in enumerate(data_loader):
             embeddings[(bi * batch_size):(bi * batch_size + embs.size(0))] = embs
             n_residues[(bi * batch_size):(bi * batch_size + embs.size(0))] = nress.squeeze(1)
 

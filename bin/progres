@@ -31,6 +31,8 @@ parser_search.add_argument("-s", "--minsimilarity", type=float, default=0.8,
     help="similarity threshold above which to return hits, default 0.8")
 parser_search.add_argument("-m", "--maxhits", type=int, default=100,
     help="maximum number of hits to return, default 100")
+parser_search.add_argument("-c", "--chainsaw", default=False, action="store_true",
+    help="split the query structure(s) into domains with Chainsaw and search with each domain")
 parser_search.add_argument("-d", "--device", default="cpu",
     help="device to run on, default is \"cpu\"")
 
@@ -79,11 +81,11 @@ def main():
         if args.querystructure:
             progres_search_print(querystructure=args.querystructure, targetdb=args.targetdb,
                                  fileformat=args.fileformat, minsimilarity=args.minsimilarity,
-                                 maxhits=args.maxhits, device=args.device)
+                                 maxhits=args.maxhits, chainsaw=args.chainsaw, device=args.device)
         elif args.querylist:
             progres_search_print(querylist=args.querylist, targetdb=args.targetdb,
                                  fileformat=args.fileformat, minsimilarity=args.minsimilarity,
-                                 maxhits=args.maxhits, device=args.device)
+                                 maxhits=args.maxhits, chainsaw=args.chainsaw, device=args.device)
         else:
             print("One of -q and -l must be given for structure searching", file=sys.stderr)
     elif args.mode == "score":
