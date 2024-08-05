@@ -272,10 +272,11 @@ def read_coords(fp, fileformat="guess", res_range=None):
     if res_range is None:
         domain_res = None
     else:
-        domain_res = []
+        domain_res_list = []
         for rr in res_range.split("_"):
             res_start, res_end = rr.split("-")
-            domain_res.extend(range(int(res_start), int(res_end) + 1))
+            domain_res_list.extend(range(int(res_start), int(res_end) + 1))
+        domain_res = set(domain_res_list)
 
     coords = []
     if chosen_format == "pdb":
