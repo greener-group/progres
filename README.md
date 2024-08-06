@@ -59,7 +59,7 @@ progres search -q query.pdb -t scope95
 - `-q` is the path to the query structure file. Alternatively, `-l` is a text file with one query file path per line and each result will be printed in turn. This is considerably faster for multiple queries since setup only occurs once and multiple workers can be used.
 - `-t` is the pre-embedded database to search against. Currently this must be either one of the databases listed below or the file path to a pre-embedded dataset generated with `progres embed`.
 - `-f` determines the file format of the query structure (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`). By default this is guessed from the file extension, with `pdb` chosen if a guess can't be made. `coords` refers to a text file with the coordinates of a Cα atom separated by white space on each line.
-- `-s` is the minimum similarity threshold above which to return hits, default 0.8. As discussed in the paper, 0.8 indicates the same fold.
+- `-s` is the Progres score (0 -> 1) above which to return hits, default 0.8. As discussed in the paper, 0.8 indicates the same fold.
 - `-m` is the maximum number of hits to return, default 100.
 
 Query structures should be a single protein domain, though it can be discontinuous (chain IDs are ignored).

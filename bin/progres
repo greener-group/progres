@@ -22,17 +22,18 @@ parser_search.add_argument("-q", "--querystructure",
 parser_search.add_argument("-l", "--querylist",
     help="text file with one query file path per line")
 parser_search.add_argument("-t", "--targetdb", required=True,
-    help=("pre-embedded database to search against, either "
-          "\"scope95\", \"scope40\", \"cath40\", \"ecod70\", \"af21org\", \"afted\" or a file path"))
+    help=("pre-embedded database to search against, either \"scope95\", "
+          "\"scope40\", \"cath40\", \"ecod70\", \"af21org\", \"afted\" or a file path"))
 parser_search.add_argument("-f", "--fileformat",
     choices=["guess", "pdb", "mmcif", "mmtf", "coords"], default="guess",
     help="file format of the query structure(s), by default guessed from the file extension")
 parser_search.add_argument("-s", "--minsimilarity", type=float, default=0.8,
-    help="similarity threshold above which to return hits, default 0.8")
+    help="Progres score (0 -> 1) above which to return hits, default 0.8")
 parser_search.add_argument("-m", "--maxhits", type=int, default=100,
-    help="maximum number of hits to return, default 100")
+    help="maximum number of hits per domain to return, default 100")
 parser_search.add_argument("-c", "--chainsaw", default=False, action="store_true",
-    help="split the query structure(s) into domains with Chainsaw and search with each domain")
+    help=("split the query structure(s) into domains with Chainsaw and search with "
+          "each domain separately"))
 parser_search.add_argument("-d", "--device", default="cpu",
     help="device to run on, default is \"cpu\"")
 
