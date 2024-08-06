@@ -231,7 +231,8 @@ class StructureDataset(Dataset):
         return len(self.file_paths)
 
     def __getitem__(self, idx):
-        graph = read_graph(self.file_paths[idx], self.fileformat, self.res_ranges[idx])
+        res_range = None if self.res_ranges[idx] == "all" else self.res_ranges[idx]
+        graph = read_graph(self.file_paths[idx], self.fileformat, res_range)
         emb = self.model(graph.to(self.device)).squeeze(0)
         nres = graph.num_nodes
         return emb, nres, self.query_nums[idx], self.domain_nums[idx], self.res_ranges[idx]
