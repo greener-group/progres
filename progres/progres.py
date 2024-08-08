@@ -198,21 +198,31 @@ class Model(torch.nn.Module):
         out = self.graph_dec(graph_feats)
         return normalize(out, dim=1)
 
+def get_file_format(fp, fileformat):
+    if fileformat == "guess":
+        chosen_format = "pdb"
+        file_ext = os.path.splitext(fp)[1].lower()
+        if file_ext == ".cif" or file_ext == ".mmcif":
+            chosen_format = "mmcif"
+        elif file_ext == ".mmtf":
+            chosen_format = "mmtf"
+    else:
+        chosen_format = fileformat
+    return chosen_format
+
 # Running the model in  __getitem__ allows multiple workers to be used on CPU
 class StructureDataset(Dataset):
     def __init__(self, file_paths, fileformat, model, device, chainsaw=False):
         if chainsaw:
             fps_doms, query_nums, domain_nums, res_ranges = [], [], [], []
             for qi, fp in enumerate(file_paths):
-                file_ext = os.path.splitext(fp)[1].lower()
-                if fileformat == "mmtf" or (fileformat == "guess" and file_ext == ".mmtf"):
-                    raise ValueError("Chainsaw domain splitting is not compatible with MMTF files")
-                rrs = predict_domains(fp)
-                for di, rr in enumerate(rrs.split(",")):
-                    fps_doms.append(fp)
-                    query_nums.append(qi + 1)
-                    domain_nums.append(di + 1)
-                    res_ranges.append(rr)
+                rrs = predict_domains(fp, get_file_format(fp, fileformat), device)
+                if rrs is not None: # None indicates no domains found
+                    for di, rr in enumerate(rrs.split(",")):
+                        fps_doms.append(fp)
+                        query_nums.append(qi + 1)
+                        domain_nums.append(di + 1)
+                        res_ranges.append(rr)
             self.file_paths = fps_doms
             self.query_nums = query_nums
             self.domain_nums = domain_nums
@@ -260,16 +270,7 @@ class EmbeddingDataset(Dataset):
         return emb, nres, query_num, domain_num, res_range
 
 def read_coords(fp, fileformat="guess", res_range=None):
-    if fileformat == "guess":
-        chosen_format = "pdb"
-        file_ext = os.path.splitext(fp)[1].lower()
-        if file_ext == ".cif" or file_ext == ".mmcif":
-            chosen_format = "mmcif"
-        elif file_ext == ".mmtf":
-            chosen_format = "mmtf"
-    else:
-        chosen_format = fileformat
-
+    chosen_format = get_file_format(fp, fileformat)
     if res_range is None:
         domain_res = None
     else:
