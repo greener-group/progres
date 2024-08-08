@@ -16,14 +16,15 @@ Searching is done by domain but [Chainsaw](https://github.com/JudeWells/chainsaw
 ## Installation
 
 1. Python 3.8 or later is required. The software is OS-independent.
-2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter), [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) and [FAISS](https://github.com/facebookresearch/faiss) as appropriate for your system. A GPU is not required but may provide speedup in certain situations. Example commands:
+2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter), [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric), [FAISS](https://github.com/facebookresearch/faiss) and [STRIDE](https://webclu.bio.wzw.tum.de/stride) as appropriate for your system. A GPU is not required but may provide speedup in certain situations. Example commands:
 ```bash
 conda create -n prog python=3.9
 conda activate prog
 conda install pytorch=1.11 faiss-cpu -c pytorch
 conda install pytorch-scatter pyg -c pyg
+conda install kimlab::stride
 ```
-3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python) and [einops](https://github.com/arogozhnikov/einops) if they are not already present.
+3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python), [einops](https://github.com/arogozhnikov/einops) and [pydantic](https://github.com/pydantic/pydantic) if they are not already present.
 4. The first time you search with the software the trained model and pre-embedded databases (~220 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes. You can set the environmental variable `PROGRES_DATA_DIR` to change where this data is stored, for example if you cannot write to the package directory. Remember to keep it set the next time you run Progres.
 5. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded similarly. This can take a while. Make sure you have enough disk space!
 
@@ -64,7 +65,7 @@ progres search -q query.pdb -t scope95
 - `-f` determines the file format of the query structure (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`). By default this is guessed from the file extension, with `pdb` chosen if a guess can't be made. `coords` refers to a text file with the coordinates of a Cα atom separated by white space on each line.
 - `-s` is the Progres score (0 -> 1) above which to return hits, default 0.8. As discussed in the paper, 0.8 indicates the same fold.
 - `-m` is the maximum number of hits to return, default 100.
-- `-c` indicates to split the query structure(s) into domains with Chainsaw and search with each domain separately. If no domains are found with Chainsaw, no results will be returned. Only the first chain in each file is considered.
+- `-c` indicates to split the query structure(s) into domains with Chainsaw and search with each domain separately. If no domains are found with Chainsaw, no results will be returned. Only the first chain in each file is considered. Running Chainsaw may take a few seconds.
 
 Other tools for splitting query structures into domains include [Merizo](https://github.com/psipred/Merizo) and [SWORD2](https://www.dsimb.inserm.fr/SWORD2).
 You can also slice out domains manually using software such as the `pdb_selres` command from [pdb-tools](http://www.bonvinlab.org/pdb-tools).

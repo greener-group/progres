@@ -41,6 +41,8 @@ data_dir          = os.getenv("PROGRES_DATA_DIR", default=progres_dir)
 trained_model_dir = os.path.join(data_dir, "trained_models", trained_model_subdir)
 database_dir      = os.path.join(data_dir, "databases"     , database_subdir     )
 trained_model_fp  = os.path.join(trained_model_dir, "trained_model.pt")
+chainsaw_dir      = os.path.join(data_dir, "chainsaw", "model_v3")
+chainsaw_model_fp = os.path.join(chainsaw_dir, "weights.pt")
 
 class SinusoidalPositionalEncoding(torch.nn.Module):
     def __init__(self, channels):
@@ -417,8 +419,9 @@ def get_num_workers(device="cpu"):
 
 def download_data_if_required(download_afted=False):
     url_base = f"https://zenodo.org/record/{zenodo_record}/files"
-    fps = [trained_model_fp]
-    urls = [f"{url_base}/trained_model.pt"]
+    fps = [trained_model_fp, chainsaw_model_fp]
+    chainsaw_model_url = "https://github.com/JudeWells/chainsaw/raw/main/saved_models/model_v3/weights.pt"
+    urls = [f"{url_base}/trained_model.pt", chainsaw_model_url]
     for targetdb in pre_embedded_dbs:
         fps.append(os.path.join(database_dir, targetdb + ".pt"))
         urls.append(f"{url_base}/{targetdb}.pt")
@@ -427,9 +430,9 @@ def download_data_if_required(download_afted=False):
             fps.append(os.path.join(database_dir, fn))
             urls.append(f"{url_base}/{fn}")
 
-    dirs_that_should_exist = [data_dir, trained_model_dir, database_dir]
+    dirs_that_should_exist = [data_dir, trained_model_dir, database_dir, chainsaw_dir]
     for dir in dirs_that_should_exist:
-        os.makedirs(dir, exist_ok=True)    
+        os.makedirs(dir, exist_ok=True)
 
     printed = False
     for fp, url in zip(fps, urls):
@@ -459,6 +462,8 @@ def download_data_if_required(download_afted=False):
                     d = torch.load(fp, map_location="cpu")
                     if fp == trained_model_fp:
                         assert "model" in d
+                    elif fp == chainsaw_model_fp:
+                        assert "layers.30.4.weight" in d
                     else:
                         assert "notes" in d
                         assert len(d["notes"]) > 10
