@@ -4,7 +4,6 @@ Only first two require factories.
 """
 import os
 
-import pandas as pd
 import torch
 
 import logging
@@ -47,18 +46,3 @@ def pairwise_predictor(learner_config, force_cpu=False, output_dir=None, device=
                                                                    "uncertainty_model"]}
     LOG.info(f"Learner kwargs: {kwargs}")
     return PairwiseDomainPredictor(model, assigner, device, checkpoint_dir=output_dir, **kwargs)
-
-
-def get_test_ids(label_path, feature_path, csv_path=None):
-    ids = [id.split('.')[0] for id in set(os.listdir(label_path)).intersection(set(os.listdir(feature_path)))]
-    if csv_path is not None:
-        df = pd.read_csv(csv_path)
-        ids = sorted(list(set(ids).intersection(set(df.chain_id))))
-    return ids
-
-
-def filter_plddt(df_path, ids, threshold=90):
-    df = pd.read_csv(df_path)
-    df = df[df.plddt > threshold]
-    ids = [i for i in ids if i in df.casp_id.values]
-    return ids

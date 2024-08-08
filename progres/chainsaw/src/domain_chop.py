@@ -3,7 +3,6 @@
 import os
 import glob
 import numpy as np
-import pandas as pd
 from pathlib import Path
 import torch
 from torch import nn
@@ -329,17 +328,3 @@ class PairwiseDomainPredictor(nn.Module):
                 new_domain_dict[dname] = res
         new_domain_dict["linker"] = domain_dict["linker"]
         return new_domain_dict
-
-
-class CSVDomainPredictor:
-    def __init__(self, csv_predictions):
-        self.csv_filepath = csv_predictions
-        self.predictions = pd.read_csv(csv_predictions)
-
-    def predict(self, x):
-        # x should be a chain_id
-        one_pred = self.predictions[self.predictions.chain_id == x[0][:5]]
-        if len(one_pred) == 0:
-            return None
-        domain_dicts = [make_domain_mapping_dict(one_pred.iloc[0])]
-        return None, domain_dicts
