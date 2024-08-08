@@ -22,6 +22,6 @@ setuptools.setup(
     license="MIT",
     keywords="protein structure search graph embedding",
     scripts=["bin/progres"],
-    install_requires=["biopython", "mmtf-python", "einops"],
+    install_requires=["biopython", "mmtf-python", "einops", "pydantic"],
     include_package_data=True,
 )

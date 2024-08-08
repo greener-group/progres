@@ -31,6 +31,8 @@ jobs:
       run: conda install pytorch==1.11 faiss-cpu -c pytorch
     - name: Install PyTorch Scatter and PyTorch Geometric
       run: conda install pytorch-scatter pyg -c pyg
+    - name: Install STRIDE
+      run: conda install kimlab::stride
     - name: Test install
       run: pip install -e .
     - name: Test help
@@ -41,8 +43,11 @@ jobs:
       run: |
         wget https://files.rcsb.org/view/1CRN.pdb
         wget https://files.rcsb.org/view/1SSU.cif
+        wget https://alphafold.ebi.ac.uk/files/AF-P31434-F1-model_v4.pdb
     - name: Test search
       run: time python bin/progres search -q 1CRN.pdb -t scope95
+    - name: Test domain split
+      run: time python bin/progres search -q AF-P31434-F1-model_v4.pdb -t cath40 -c
     - name: Test score
       run: time python bin/progres score 1CRN.pdb 1SSU.cif > score.txt
     - name: Check score
