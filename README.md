@@ -73,6 +73,8 @@ Interpreting the hit descriptions depends on the database being searched.
 The domain name often includes a reference to the corresponding PDB file, for example d1a6ja_ refers to PDB ID 1A6J chain A, and this can be opened in the [RCSB PDB structure view](https://www.rcsb.org/3d-view/1A6J/1) to get a quick look.
 For the AlphaFold database TED domains, files can be downloaded from [links such as this](https://alphafold.ebi.ac.uk/files/AF-A0A6J8EXE6-F1-model_v4.pdb) where `AF-A0A6J8EXE6-F1` is the first part of the hit notes and is followed by the residue range of the domain.
 
+### Available databases
+
 The available pre-embedded databases are:
 
 | Name      | Description                                                                                                                                                                                | Number of domains | Search time (1 query)      | Search time (100 queries)  |
