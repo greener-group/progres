@@ -1,0 +1,9 @@
+{
+    "description": "alpha distance only, keep the start and end boundaries in one channel but use -1",
+    "alpha_distances": true,
+    "beta_distances": false,
+    "ss_bounds": true,
+    "negative_ss_end": true,
+    "separate_channel_ss_start_end": false,
+    "same_channel_boundaries_and_ss": false
+}

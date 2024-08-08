@@ -4,6 +4,6 @@ build
 dist
 progres/trained_models/v*
 progres/databases/v*
-progres/chainsaw/model_v3/weights.pt
+progres/chainsaw/model_v3/weights*
 .vs
 .vscode
