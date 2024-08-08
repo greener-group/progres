@@ -9,7 +9,9 @@ This repository contains the method from the pre-print:
 It provides the `progres` Python package that lets you search structures against pre-embedded structural databases, score pairs of structures and pre-embed datasets for searching against.
 Searching typically takes 1-2 s and is much faster for multiple queries.
 For the AlphaFold database, initial data loading takes around a minute but subsequent searching takes a tenth of a second per query.
+
 Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod), the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) and the [AlphaFold database TED domains](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) are provided for searching against.
+Searching is done by domain but [Chainsaw](https://github.com/JudeWells/chainsaw) can be used to automatically split query structures into domains.
 
 ## Installation
 
@@ -34,7 +36,8 @@ On Windows you can call the `bin/progres` script with python if you can't access
 
 Run `progres -h` to see the help text and `progres {mode} -h` to see the help text for each mode.
 The modes are described below but there are other options outlined in the help text.
-For example the `-d` flag sets the device to run on; this is `cpu` by default since this is often fastest for searching, but `cuda` may be faster when searching many queries or embedding a dataset.
+For example the `-d` flag sets the device to run on; this is `cpu` by default since this is often fastest for searching, but `cuda` will likely be faster when splitting domains with Chainsaw, searching many queries or embedding a dataset.
+Try both if performance is important.
 
 ## Search a structure against a database
 
@@ -56,14 +59,14 @@ progres search -q query.pdb -t scope95
       5  d3oxpa1       147      0.9968  d.112.1.0 - automated matches {Yersinia pestis [TaxId: 214092]}
 ...
 ```
-- `-q` is the path to the query structure file. Alternatively, `-l` is a text file with one query file path per line and each result will be printed in turn. This is considerably faster for multiple queries since setup only occurs once and multiple workers can be used.
+- `-q` is the path to the query structure file. Alternatively, `-l` is a text file with one query file path per line and each result will be printed in turn. This is considerably faster for multiple queries since setup only occurs once and multiple workers can be used. Only the first chain in each file is considered.
 - `-t` is the pre-embedded database to search against. Currently this must be either one of the databases listed below or the file path to a pre-embedded dataset generated with `progres embed`.
 - `-f` determines the file format of the query structure (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`). By default this is guessed from the file extension, with `pdb` chosen if a guess can't be made. `coords` refers to a text file with the coordinates of a Cα atom separated by white space on each line.
 - `-s` is the Progres score (0 -> 1) above which to return hits, default 0.8. As discussed in the paper, 0.8 indicates the same fold.
 - `-m` is the maximum number of hits to return, default 100.
+- `-c` indicates to split the query structure(s) into domains with Chainsaw and search with each domain separately. If no domains are found with Chainsaw, no results will be returned. Only the first chain in each file is considered.
 
-Query structures should be a single protein domain, though it can be discontinuous (chain IDs are ignored).
-Tools such as [Merizo](https://github.com/psipred/Merizo), [SWORD2](https://www.dsimb.inserm.fr/SWORD2) and [Chainsaw](https://github.com/JudeWells/chainsaw) can be used to predict domains from a larger structure.
+Other tools for splitting query structures into domains include [Merizo](https://github.com/psipred/Merizo) and [SWORD2](https://www.dsimb.inserm.fr/SWORD2).
 You can also slice out domains manually using software such as the `pdb_selres` command from [pdb-tools](http://www.bonvinlab.org/pdb-tools).
 
 Interpreting the hit descriptions depends on the database being searched.
