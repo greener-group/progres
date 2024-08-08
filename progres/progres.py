@@ -283,16 +283,14 @@ def read_coords(fp, fileformat="guess", res_range=None):
     coords = []
     if chosen_format == "pdb":
         with open(fp) as f:
-            c = 0
             chain_id = None
             for line in f.readlines():
-                if (line.startswith("ATOM  ") or line.startswith("HETATM")) and line[12:16].strip() == "CA":
-                    c += 1
+                if line.startswith("ATOM  ") and line[12:16].strip() == "CA":
                     if chain_id is None:
                         chain_id = line[21]
                     elif line[21] != chain_id:
                         break # Only read first chain
-                    if domain_res is None or c in domain_res:
+                    if domain_res is None or int(line[22:26]) in domain_res:
                         coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                 elif line.startswith("ENDMDL"):
                     break
@@ -304,15 +302,16 @@ def read_coords(fp, fileformat="guess", res_range=None):
         else:
             from Bio.PDB.mmtf import MMTFParser
             struc = MMTFParser.get_structure(fp)
-        c = 0
         for model in struc:
             for chain in model:
-                for atom in chain.get_atoms():
-                    if atom.get_name() == "CA":
-                        c += 1
-                        if domain_res is None or c in domain_res:
-                            cs = atom.get_coord()
-                            coords.append([float(cs[0]), float(cs[1]), float(cs[2])])
+                for res in chain:
+                    if res.get_id()[0] == " ": # Ignore hetero atoms
+                        resnum = res.get_id()[1]
+                        for atom in res:
+                            if atom.get_name() == "CA":
+                                if domain_res is None or resnum in domain_res:
+                                    cs = atom.get_coord()
+                                    coords.append([float(cs[0]), float(cs[1]), float(cs[2])])
                 break # Only read first chain
             break # Only read first model
     elif chosen_format == "coords":
