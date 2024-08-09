@@ -165,7 +165,7 @@ def predict(model, pdb_path, renumber_pdbs=True, pdbchain=None,
     LOG.info(f"Runtime: {round(runtime, 3)}s")
     return result
 
-def predict_domains(structure_file, fileformat="pdb", device="cpu"):
+def predict_domains(structure_file, fileformat="pdb", device="cpu", pdbchain=None):
     loglevel = os.environ.get("LOGLEVEL", "ERROR").upper() # Change to "INFO" to see more
     setup_logging(loglevel)
     model = load_model(
@@ -173,5 +173,5 @@ def predict_domains(structure_file, fileformat="pdb", device="cpu"):
         device=device,
     )
     result = predict(model, structure_file, renumber_pdbs=False,
-                     pdbchain=None, fileformat=fileformat)
+                     pdbchain=pdbchain, fileformat=fileformat)
     return result.chopping
