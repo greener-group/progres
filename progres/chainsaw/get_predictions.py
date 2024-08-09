@@ -165,9 +165,16 @@ def predict(model, pdb_path, renumber_pdbs=True, pdbchain=None,
     LOG.info(f"Runtime: {round(runtime, 3)}s")
     return result
 
-def predict_domains(structure_file, fileformat="pdb", device="cpu", pdbchain=None):
+def predict_domains(structure_file, fileformat=None, device="cpu", pdbchain=None):
     loglevel = os.environ.get("LOGLEVEL", "ERROR").upper() # Change to "INFO" to see more
     setup_logging(loglevel)
+    if fileformat is None:
+        fileformat = "pdb"
+        file_ext = os.path.splitext(structure_file)[1].lower()
+        if file_ext == ".cif" or file_ext == ".mmcif":
+            fileformat = "mmcif"
+        elif file_ext == ".mmtf":
+            fileformat = "mmtf"
     model = load_model(
         model_dir=os.path.join(constants.REPO_ROOT, "model_v3"),
         device=device,
