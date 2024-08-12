@@ -12,6 +12,7 @@ from einops import rearrange
 import importlib.metadata
 from math import ceil
 import os
+import re
 import sys
 from urllib import request
 
@@ -278,7 +279,7 @@ def read_coords(fp, fileformat="guess", res_range=None):
     else:
         domain_res_list = []
         for rr in res_range.split("_"):
-            res_start, res_end = rr.split("-")
+            res_start, res_end = re.sub(r"[^0-9-]", "", rr).split("-") # Remove ins code
             domain_res_list.extend(range(int(res_start), int(res_end) + 1))
         domain_res = set(domain_res_list)
 
