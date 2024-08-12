@@ -10,6 +10,7 @@ import sys
 import argparse
 import logging
 from Bio.PDB.MMCIFParser import MMCIFParser
+from Bio.PDB.mmtf import MMTFParser
 from Bio.PDB import PDBIO
 
 LOG = logging.getLogger(__name__)
@@ -75,12 +76,16 @@ def rename_chains(structure):
                 o.id = c
     return chainmap
 
-def cif2pdb(ciffile):
-    pdbfile = ciffile + ".pdb"
+def cif2pdb(ciffile, pdbfile, fileformat):
     strucid = os.path.split(ciffile)[-1].split(".")[0]
     # Read file
-    parser = MMCIFParser()
-    structure = parser.get_structure(strucid, ciffile)
+    if fileformat == "mmcif":
+        parser = MMCIFParser()
+        structure = parser.get_structure(strucid, ciffile)
+    elif fileformat == "mmtf":
+        structure = MMTFParser.get_structure(ciffile)
+    else:
+        raise ValueError(f"Unrecognized file format: {fileformat}")
     # rename long chains
     try:
         chainmap = rename_chains(structure)
@@ -91,45 +96,6 @@ def cif2pdb(ciffile):
     for new, old in chainmap.items():
         if new != old:
             logging.info("Renaming chain {0} to {1}".format(old, new))
-
-    # Write PDB
-    io = PDBIO()
-    io.set_structure(structure)
-    io.save(pdbfile)
-    return pdbfile
-
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Convert mmCIF to PDB format')
-    parser.add_argument("ciffile", help="mmCIF input file")
-    parser.add_argument("pdbfile", nargs="?", help="PDB output file. Default based on CIF filename")
-    parser.add_argument("-v", "--verbose", help="Long messages",
-                        dest="verbose", default=False, action="store_true")
-    args = parser.parse_args()
-
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG if args.verbose else logging.WARN)
-
-    ciffile = args.ciffile
-    pdbfile = args.pdbfile or ciffile + ".pdb"
-    # Not sure why biopython needs this to read a cif file
-    strucid = ciffile[:4] if len(ciffile) > 4 else "1xxx"
-
-    # Read file
-    parser = MMCIFParser()
-    structure = parser.get_structure(strucid, ciffile)
-
-    # rename long chains
-    try:
-        chainmap = rename_chains(structure)
-    except OutOfChainsError:
-        logging.error("Too many chains to represent in PDB format")
-        sys.exit(1)
-
-    if args.verbose:
-        for new, old in chainmap.items():
-            if new != old:
-                logging.info("Renaming chain {0} to {1}".format(old, new))
 
     # Write PDB
     io = PDBIO()

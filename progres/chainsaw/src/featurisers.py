@@ -69,34 +69,32 @@ def get_model_structure_residues(structure_model: Bio.PDB.Structure, chain='A') 
     return residues
 
 
-def inference_time_create_features(pdb_path, feature_config, chain="A", *,
+def inference_time_create_features(file_path, feature_config, chain="A", *,
                                    model_structure: Bio.PDB.Structure=None,
-                                   renumber_pdbs=True, stride_path=STRIDE_EXE,
-                                   fileformat="pdb",
+                                   stride_path=STRIDE_EXE, fileformat="pdb",
                                    ):
-    if fileformat == "mmcif":
-        pdb_path = cif2pdb(pdb_path)
+    if fileformat == "pdb":
+        pdb_path = file_path
+    else:
+        temp_pdb_file = NamedTemporaryFile()
+        pdb_path = temp_pdb_file.name
+        cif2pdb(file_path, pdb_path, fileformat)
 
     if not model_structure:
         model_structure = get_model_structure(pdb_path)
 
     dist_matrix = get_distance(model_structure, chain=chain)
-    if renumber_pdbs:
-        output_pdb_path = pdb_path.replace('.pdb', '_renum.pdb').replace('.cif', '_renum.cif')
-        renum_pdb_file(pdb_path, output_pdb_path)
-    else:
-        output_pdb_path = pdb_path
-    temp_file = NamedTemporaryFile()
-    ss_filepath = temp_file.name
-    calculate_ss(output_pdb_path, chain, stride_path, ssfile=ss_filepath)
+    temp_ss_file = NamedTemporaryFile()
+    ss_filepath = temp_ss_file.name
+    calculate_ss(pdb_path, chain, stride_path, ssfile=ss_filepath)
     helix, strand = make_ss_matrix(ss_filepath, nres=dist_matrix.shape[-1])
     if feature_config['ss_bounds']:
         end_res_val = -1 if feature_config['negative_ss_end'] else 1
         helix_boundaries = make_boundary_matrix(helix, end_res_val=end_res_val)
         strand_boundaries = make_boundary_matrix(strand, end_res_val=end_res_val)
-    if renumber_pdbs:
-        os.remove(output_pdb_path)
-    temp_file.close()
+    temp_ss_file.close()
+    if fileformat != "pdb":
+        temp_pdb_file.close()
     LOG.info(f"Distance matrix shape: {dist_matrix.shape}, SS matrix shape: {helix.shape}")
     if feature_config['ss_bounds']:
         if feature_config['same_channel_boundaries_and_ss']:

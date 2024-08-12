@@ -49,8 +49,7 @@ def load_model(*,
     learner.eval()
     return learner
 
-def predict(model, pdb_path, renumber_pdbs=True, pdbchain=None,
-            fileformat="pdb") -> List[PredictionResult]:
+def predict(model, pdb_path, pdbchain=None, fileformat="pdb") -> List[PredictionResult]:
     """
     Makes the prediction and returns a list of PredictionResult objects
     """
@@ -74,7 +73,6 @@ def predict(model, pdb_path, renumber_pdbs=True, pdbchain=None,
     x = featurisers.inference_time_create_features(pdb_path,
                                                     feature_config=model.feature_config,
                                                     chain=pdbchain,
-                                                    renumber_pdbs=renumber_pdbs,
                                                     model_structure=model_structure,
                                                     fileformat=fileformat,
                                                    )
@@ -179,6 +177,5 @@ def predict_domains(structure_file, fileformat=None, device="cpu", pdbchain=None
         model_dir=os.path.join(constants.REPO_ROOT, "model_v3"),
         device=device,
     )
-    result = predict(model, structure_file, renumber_pdbs=False,
-                     pdbchain=pdbchain, fileformat=fileformat)
+    result = predict(model, structure_file, pdbchain=pdbchain, fileformat=fileformat)
     return result.chopping
