@@ -45,6 +45,12 @@ trained_model_fp  = os.path.join(trained_model_dir, "trained_model.pt")
 chainsaw_dir      = os.path.join(data_dir, "chainsaw", "model_v3")
 chainsaw_model_fp = os.path.join(chainsaw_dir, "weights.pt")
 
+class NoCoordinatesError(Exception): 
+    pass
+
+class ChainsawError(Exception): 
+    pass
+
 class SinusoidalPositionalEncoding(torch.nn.Module):
     def __init__(self, channels):
         super().__init__()
@@ -219,7 +225,12 @@ class StructureDataset(Dataset):
         if chainsaw:
             fps_doms, query_nums, domain_nums, res_ranges = [], [], [], []
             for qi, fp in enumerate(file_paths):
-                rrs = predict_domains(fp, get_file_format(fp, fileformat), device)
+                try:
+                    rrs = predict_domains(fp, get_file_format(fp, fileformat), device)
+                except:
+                    raise ChainsawError(("error running Chainsaw, check that your file "
+                                         "contains protein residues and that the correct "
+                                         "file format is selected"))
                 if rrs is not None: # None indicates no domains found
                     for di, rr in enumerate(rrs.split(",")):
                         fps_doms.append(fp)
@@ -329,6 +340,10 @@ def read_coords(fp, fileformat="guess", res_range=None):
     return coords
 
 def coords_to_graph(coords):
+    if len(coords) == 0:
+        raise NoCoordinatesError(("no Cα coordinates found, check that your file "
+                                  "contains protein residues and that the correct file "
+                                  "format is selected"))
     n_res = len(coords)
     if not isinstance(coords, torch.Tensor):
         coords = torch.tensor(coords)
@@ -624,7 +639,7 @@ def progres_search_print(querystructure=None, querylist=None, queryembeddings=No
         print("# DOMAIN_NUM:" , rd["domain_num"])
         print("# DOMAIN_SIZE:", rd["domain_size"], "residues", "(" + res_range_str + ")")
         print("# DATABASE:", targetdb)
-        print(f"# PARAMETERS: minsimilarity {minsimilarity}, maxhits {maxhits}, " +
+        print(f"# PARAMETERS: minsimilarity {minsimilarity}, maxhits {maxhits},",
               f"chainsaw {chainsaw_str}, faiss {faiss_str}, progres v{version}")
         print("  ".join([
             "#" + " HIT_N".rjust(padding_inds - 1),
