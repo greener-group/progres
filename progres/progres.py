@@ -283,6 +283,18 @@ class EmbeddingDataset(Dataset):
         domain_num = 1
         return emb, nres, query_num, domain_num, res_range
 
+def extract_res_range(rr):
+    rr_no_ins_code = re.sub(r"[^0-9-]", "", rr)
+    n_hyphen = rr_no_ins_code.count("-")
+    if n_hyphen < 3: # 1-10 or -1-10
+        res_start, res_end = rr_no_ins_code.rsplit("-", 1)
+    elif n_hyphen == 3: # -10--1
+        splits = rr_no_ins_code.split("-")
+        res_start, res_end = "-" + splits[1], "-" + splits[3]
+    else:
+        raise ValueError(f"could not extract residue range: {rr}")
+    return range(int(res_start), int(res_end) + 1)
+
 def read_coords(fp, fileformat="guess", res_range=None):
     chosen_format = get_file_format(fp, fileformat)
     if res_range is None:
@@ -290,8 +302,7 @@ def read_coords(fp, fileformat="guess", res_range=None):
     else:
         domain_res_list = []
         for rr in res_range.split("_"):
-            res_start, res_end = re.sub(r"[^0-9-]", "", rr).split("-") # Remove ins code
-            domain_res_list.extend(range(int(res_start), int(res_end) + 1))
+            domain_res_list.extend(extract_res_range(rr))
         domain_res = set(domain_res_list)
 
     coords = []
@@ -500,7 +511,7 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
                              maxhits=default_maxhits, chainsaw=False, device="cpu",
                              batch_size=None):
     if querystructure is None and querylist is None and queryembeddings is None:
-        raise ValueError("One of querystructure, querylist or queryembeddings must be given")
+        raise ValueError("one of querystructure, querylist or queryembeddings must be given")
     if targetdb is None:
         raise ValueError("targetdb must be given")
 

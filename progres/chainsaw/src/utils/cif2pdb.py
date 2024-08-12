@@ -97,7 +97,11 @@ def cif2pdb(ciffile, pdbfile, fileformat):
         if new != old:
             logging.info("Renaming chain {0} to {1}".format(old, new))
 
+    for atom in structure.get_atoms():
+        if atom.get_serial_number() > 99990:
+            atom.set_serial_number(99990) # Leave space for TER
+
     # Write PDB
     io = PDBIO()
     io.set_structure(structure)
-    io.save(pdbfile)
+    io.save(pdbfile, preserve_atom_numbering=True)
