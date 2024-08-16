@@ -1,0 +1,2 @@
+d3urra1.pdb d3urra1 d.112.1.0 - automated matches {Burkholderia thailandensis [TaxId: 271848]}
+d3oxpa1.pdb d3oxpa1 d.112.1.0 - automated matches {Yersinia pestis [TaxId: 214092]}

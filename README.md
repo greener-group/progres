@@ -42,7 +42,7 @@ Try both if performance is important.
 
 ## Search a structure against a database
 
-To search a PDB file `query.pdb` against domains in the SCOPe database and print output:
+To search a PDB file `query.pdb` (which can be found in the `data` directory) against domains in the SCOPe database and print output:
 ```bash
 progres search -q query.pdb -t scope95
 ```
@@ -85,7 +85,7 @@ The available pre-embedded databases are:
 | `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID                                                                                                      | 15,127            | 1.32 s                     | 2.36 s                     |
 | `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                                                                                                                         | 31,884            | 1.38 s                     | 2.79 s                     |
 | `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287                                                                                                           | 71,635            | 1.46 s                     | 3.82 s                     |
-| `pdb100`  | All PDB protein chains as of 02/08/24 split into domains with Chainsaw                                                                                                                     | 1,177,152         | 2.90 s                     | 27.3 s                     |
+| `pdb100`  | All [PDB](https://www.rcsb.org) protein chains as of 02/08/24 split into domains with Chainsaw                                                                                             | 1,177,152         | 2.90 s                     | 27.3 s                     |
 | `af21org` | [AlphaFold](https://alphafold.ebi.ac.uk) structures for 21 model organisms split into domains by [CATH-Assign](https://doi.org/10.1038/s42003-023-04488-9)                                 | 338,258           | 2.21 s                     | 11.0 s                     |
 | `afted`   | [AlphaFold database](https://alphafold.ebi.ac.uk) structures split into domains by [TED](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) and clustered at 50% sequence identity | 53,344,209        | 67.7 s                     | 73.1 s                     |
 
@@ -120,6 +120,8 @@ progres embed -l filepaths.txt -o searchdb.pt
 
 Again, the structures should correspond to single protein domains.
 The embeddings are stored as Float16, which has no noticeable effect on search performance.
+
+As an example, you can run the above command from the `data` directory to generate a database with two structures.
 
 ## Python library
 
