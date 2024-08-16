@@ -54,6 +54,11 @@ jobs:
       run: |
         sc=$(cat score.txt)
         if [ ${sc:0:7} == "0.72652" ]; then echo "Correct score"; else echo "Wrong score, score is $sc"; exit 1; fi
+    - name: Test database embedding
+      run: |
+        cd data
+        time python bin/progres embed -l filepaths.txt -o out.pt
+        time python bin/progres search -q query.pdb -t out.pt
   test_pypi:
     runs-on: ubuntu-latest
     strategy:
