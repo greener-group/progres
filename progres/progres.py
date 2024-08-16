@@ -682,7 +682,8 @@ def progres_score_print(structure1, structure2, fileformat1="guess",
     score = progres_score(structure1, structure2, fileformat1, fileformat2, device)
     print(score)
 
-def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", batch_size=None):
+def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu",
+                  batch_size=None, float_type=torch.float16):
     download_data_if_required()
 
     fps, domids, notes = [], [], []
@@ -714,7 +715,7 @@ def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", b
     torch.save(
         {
             "ids"       : domids,
-            "embeddings": embeddings.cpu().to(torch.float16),
+            "embeddings": embeddings.cpu().to(float_type),
             "nres"      : list(n_residues.cpu().numpy()),
             "notes"     : notes,
         },
