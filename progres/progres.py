@@ -709,7 +709,7 @@ def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", b
         n_residues = torch.zeros(len(data_set), dtype=torch.int, device=device)
         for bi, (embs, nress, _, _, _) in enumerate(data_loader):
             embeddings[(bi * batch_size):(bi * batch_size + embs.size(0))] = embs
-            n_residues[(bi * batch_size):(bi * batch_size + embs.size(0))] = nress.squeeze(1)
+            n_residues[(bi * batch_size):(bi * batch_size + embs.size(0))] = nress
 
     torch.save(
         {
