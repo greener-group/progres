@@ -10,7 +10,7 @@ It provides the `progres` Python package that lets you search structures against
 Searching typically takes 1-2 s and is much faster for multiple queries.
 For the AlphaFold database, initial data loading takes around a minute but subsequent searching takes a tenth of a second per query.
 
-Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod), the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) and the [AlphaFold database TED domains](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) are provided for searching against.
+Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod), the whole [PDB](https://www.rcsb.org), the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) and the [AlphaFold database TED domains](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) are provided for searching against.
 Searching is done by domain but [Chainsaw](https://github.com/JudeWells/chainsaw) can be used to automatically split query structures into domains.
 
 ## Installation
@@ -25,7 +25,7 @@ conda install pytorch-scatter pyg -c pyg
 conda install kimlab::stride
 ```
 3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python), [einops](https://github.com/arogozhnikov/einops) and [pydantic](https://github.com/pydantic/pydantic) if they are not already present.
-4. The first time you search with the software the trained model and pre-embedded databases (~220 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes. You can set the environmental variable `PROGRES_DATA_DIR` to change where this data is stored, for example if you cannot write to the package directory. Remember to keep it set the next time you run Progres.
+4. The first time you search with the software the trained model and pre-embedded databases (~660 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes. You can set the environmental variable `PROGRES_DATA_DIR` to change where this data is stored, for example if you cannot write to the package directory. Remember to keep it set the next time you run Progres.
 5. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded similarly. This can take a while. Make sure you have enough disk space!
 
 Alternatively, a Docker file is available in the `docker` directory.
@@ -49,9 +49,10 @@ progres search -q query.pdb -t scope95
 ```
 # QUERY_NUM: 1
 # QUERY: query.pdb
-# QUERY_SIZE: 150 residues
+# DOMAIN_NUM: 1
+# DOMAIN_SIZE: 150 residues (1-150)
 # DATABASE: scope95
-# PARAMETERS: minsimilarity 0.8, maxhits 100, progres v0.2.4
+# PARAMETERS: minsimilarity 0.8, maxhits 100, chainsaw no, faiss no, progres v0.2.5
 # HIT_N  DOMAIN   HIT_NRES  SIMILARITY  NOTES
       1  d1a6ja_       150      1.0000  d.112.1.1 - Nitrogen regulatory bacterial protein IIa-ntr {Escherichia coli [TaxId: 562]}
       2  d2a0ja_       146      0.9988  d.112.1.0 - automated matches {Neisseria meningitidis [TaxId: 122586]}
@@ -84,6 +85,7 @@ The available pre-embedded databases are:
 | `scope40` | ASTRAL set of [SCOPe](https://scop.berkeley.edu) 2.08 domains clustered at 40% seq ID                                                                                                      | 15,127            | 1.32 s                     | 2.36 s                     |
 | `cath40`  | S40 non-redundant domains from [CATH](http://cathdb.info) 23/11/22                                                                                                                         | 31,884            | 1.38 s                     | 2.79 s                     |
 | `ecod70`  | F70 representative domains from [ECOD](http://prodata.swmed.edu/ecod) develop287                                                                                                           | 71,635            | 1.46 s                     | 3.82 s                     |
+| `pdb100`  | All PDB protein chains as of 02/08/24 split into domains with Chainsaw                                                                                                                     | 1,177,152         | 2.90 s                     | 27.3 s                     |
 | `af21org` | [AlphaFold](https://alphafold.ebi.ac.uk) structures for 21 model organisms split into domains by [CATH-Assign](https://doi.org/10.1038/s42003-023-04488-9)                                 | 338,258           | 2.21 s                     | 11.0 s                     |
 | `afted`   | [AlphaFold database](https://alphafold.ebi.ac.uk) structures split into domains by [TED](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) and clustered at 50% sequence identity | 53,344,209        | 67.7 s                     | 73.1 s                     |
 
@@ -178,6 +180,7 @@ The trained model and pre-embedded databases are available on [Zenodo](https://z
 ## Notes
 
 The implementation of the E(n)-equivariant GNN uses [EGNN PyTorch](https://github.com/lucidrains/egnn-pytorch).
+We also include code from [SupContrast](https://github.com/HobbitLong/SupContrast) and [Chainsaw](https://github.com/JudeWells/chainsaw).
 
 Please open issues or [get in touch](http://jgreener64.github.io) with any feedback.
 Contributions via pull requests are welcome.

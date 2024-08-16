@@ -31,7 +31,7 @@ dropout = 0.0
 dropout_final = 0.0
 default_minsimilarity = 0.8
 default_maxhits = 100
-pre_embedded_dbs = ["scope95", "scope40", "cath40", "ecod70", "af21org"]
+pre_embedded_dbs = ["scope95", "scope40", "cath40", "ecod70", "pdb100", "af21org"]
 pre_embedded_dbs_faiss = ["afted"]
 zenodo_record = "10975201" # This only needs to change when the trained model or databases change
 trained_model_subdir = "v_0_2_0" # This only needs to change when the trained model changes
@@ -470,7 +470,7 @@ def download_data_if_required(download_afted=False):
                       sep="", file=sys.stderr)
                 printed = True
             if not printed:
-                print("Downloading data as first time setup (~220 MB) to ", data_dir,
+                print("Downloading data as first time setup (~660 MB) to ", data_dir,
                       ", internet connection required, this can take a few minutes",
                       sep="", file=sys.stderr)
                 printed = True
