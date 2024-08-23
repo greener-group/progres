@@ -1,5 +1,12 @@
 # Progres release notes
 
+## v0.2.5 - Aug 2024
+
+- Structures can now be split into domains with Chainsaw before searching, with each domain searched separately. This makes Progres suitable for use with multi-domain structures.
+- The whole PDB split into domains with Chainsaw is made available to search against.
+- Hetero atoms are now ignored during file reading.
+- Example files are added for searching and database embedding.
+
 ## v0.2.4 - Jul 2024
 
 - The `score` mode is added to calculate the Progres score between two structures.
