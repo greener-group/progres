@@ -1,5 +1,9 @@
 # Progres release notes
 
+## v0.2.6 - Aug 2024
+
+- Python packaging issues are fixed.
+
 ## v0.2.5 - Aug 2024
 
 - Structures can now be split into domains with Chainsaw before searching, with each domain searched separately. This makes Progres suitable for use with multi-domain structures.
