@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from .sparse_lowrank import greedy_V
+from progres.chainsaw.src.domain_assignment.sparse_lowrank import greedy_V
 
 
 class BaseAssigner:

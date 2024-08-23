@@ -9,10 +9,9 @@ import numpy as np
 import torch
 from scipy.spatial import distance_matrix
 
-from .constants import _3to1, STRIDE_EXE
-from .utils.cif2pdb import cif2pdb
-from .utils.secondary_structure import renum_pdb_file, \
-    calculate_ss, make_ss_matrix
+from progres.chainsaw.src.constants import _3to1, STRIDE_EXE
+from progres.chainsaw.src.utils.cif2pdb import cif2pdb
+from progres.chainsaw.src.utils.secondary_structure import calculate_ss, make_ss_matrix
 
 LOG = logging.getLogger(__name__)
 

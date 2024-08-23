@@ -13,10 +13,10 @@ import sys
 import time
 from typing import List
 
-from .src import constants, featurisers
-from .src.domain_assignment.util import convert_domain_dict_strings
-from .src.factories import pairwise_predictor
-from .src.models.results import PredictionResult
+from progres.chainsaw.src import constants, featurisers
+from progres.chainsaw.src.domain_assignment.util import convert_domain_dict_strings
+from progres.chainsaw.src.factories import pairwise_predictor
+from progres.chainsaw.src.models.results import PredictionResult
 from .src.utils import common as common_utils
 
 LOG = logging.getLogger(__name__)

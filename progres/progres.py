@@ -16,7 +16,7 @@ import re
 import sys
 from urllib import request
 
-from .chainsaw.get_predictions import predict_domains
+from progres.chainsaw.get_predictions import predict_domains
 
 n_layers = 6
 embedding_size = 128

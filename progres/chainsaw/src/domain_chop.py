@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 import torch
 from torch import nn
-from .domain_assignment.util import make_pair_labels, make_domain_mapping_dict
+from progres.chainsaw.src.domain_assignment.util import make_pair_labels, make_domain_mapping_dict
 
 import logging
 LOG = logging.getLogger(__name__)

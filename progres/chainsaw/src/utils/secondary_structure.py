@@ -15,7 +15,7 @@ import sys
 
 import numpy as np
 
-from ..constants import REPO_ROOT
+from progres.chainsaw.src.constants import REPO_ROOT
 import logging
 LOG = logging.getLogger(__name__)
 

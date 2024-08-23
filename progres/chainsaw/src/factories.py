@@ -8,10 +8,10 @@ import torch
 
 import logging
 
-from .domain_chop import PairwiseDomainPredictor
-from .models.rosetta import trRosettaNetwork
-from .domain_assignment.assigners import SparseLowRank
-from .utils import common as common_utils
+from progres.chainsaw.src.domain_chop import PairwiseDomainPredictor
+from progres.chainsaw.src.models.rosetta import trRosettaNetwork
+from progres.chainsaw.src.domain_assignment.assigners import SparseLowRank
+from progres.chainsaw.src.utils import common as common_utils
 
 
 LOG = logging.getLogger(__name__)
