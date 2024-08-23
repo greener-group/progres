@@ -12,8 +12,11 @@ from einops import rearrange
 import importlib.metadata
 from math import ceil
 import os
+import re
 import sys
 from urllib import request
+
+from .chainsaw.get_predictions import predict_domains
 
 n_layers = 6
 embedding_size = 128
@@ -28,9 +31,9 @@ dropout = 0.0
 dropout_final = 0.0
 default_minsimilarity = 0.8
 default_maxhits = 100
-pre_embedded_dbs = ["scope95", "scope40", "cath40", "ecod70", "af21org"]
+pre_embedded_dbs = ["scope95", "scope40", "cath40", "ecod70", "pdb100", "af21org"]
 pre_embedded_dbs_faiss = ["afted"]
-zenodo_record = "10975201" # This only needs to change when the trained model or databases change
+zenodo_record = "13365312" # This only needs to change when the trained model or databases change
 trained_model_subdir = "v_0_2_0" # This only needs to change when the trained model changes
 database_subdir      = "v_0_2_1" # This only needs to change when the databases change
 progres_dir       = os.path.dirname(os.path.realpath(__file__))
@@ -39,6 +42,14 @@ data_dir          = os.getenv("PROGRES_DATA_DIR", default=progres_dir)
 trained_model_dir = os.path.join(data_dir, "trained_models", trained_model_subdir)
 database_dir      = os.path.join(data_dir, "databases"     , database_subdir     )
 trained_model_fp  = os.path.join(trained_model_dir, "trained_model.pt")
+chainsaw_dir      = os.path.join(data_dir, "chainsaw", "model_v3")
+chainsaw_model_fp = os.path.join(chainsaw_dir, "weights.pt")
+
+class NoCoordinatesError(Exception): 
+    pass
+
+class ChainsawError(Exception): 
+    pass
 
 class SinusoidalPositionalEncoding(torch.nn.Module):
     def __init__(self, channels):
@@ -196,10 +207,46 @@ class Model(torch.nn.Module):
         out = self.graph_dec(graph_feats)
         return normalize(out, dim=1)
 
+def get_file_format(fp, fileformat):
+    if fileformat == "guess":
+        chosen_format = "pdb"
+        file_ext = os.path.splitext(fp)[1].lower()
+        if file_ext == ".cif" or file_ext == ".mmcif":
+            chosen_format = "mmcif"
+        elif file_ext == ".mmtf":
+            chosen_format = "mmtf"
+    else:
+        chosen_format = fileformat
+    return chosen_format
+
 # Running the model in  __getitem__ allows multiple workers to be used on CPU
 class StructureDataset(Dataset):
-    def __init__(self, file_paths, fileformat, model, device):
-        self.file_paths = file_paths
+    def __init__(self, file_paths, fileformat, model, device, chainsaw=False):
+        if chainsaw:
+            fps_doms, query_nums, domain_nums, res_ranges = [], [], [], []
+            for qi, fp in enumerate(file_paths):
+                try:
+                    rrs = predict_domains(fp, get_file_format(fp, fileformat), device)
+                except:
+                    raise ChainsawError(("error running Chainsaw, check that your file "
+                                         "contains protein residues and that the correct "
+                                         "file format is selected"))
+                if rrs is not None: # None indicates no domains found
+                    for di, rr in enumerate(rrs.split(",")):
+                        fps_doms.append(fp)
+                        query_nums.append(qi + 1)
+                        domain_nums.append(di + 1)
+                        res_ranges.append(rr)
+            self.file_paths = fps_doms
+            self.query_nums = query_nums
+            self.domain_nums = domain_nums
+            self.res_ranges = res_ranges
+        else:
+            self.file_paths = file_paths
+            self.query_nums = list(range(1, len(file_paths) + 1))
+            self.domain_nums = [1] * len(file_paths)
+            self.res_ranges = ["all"] * len(file_paths)
+
         self.fileformat = fileformat
         self.model = model
         self.device = device
@@ -208,10 +255,11 @@ class StructureDataset(Dataset):
         return len(self.file_paths)
 
     def __getitem__(self, idx):
-        graph = read_graph(self.file_paths[idx], self.fileformat)
+        res_range = None if self.res_ranges[idx] == "all" else self.res_ranges[idx]
+        graph = read_graph(self.file_paths[idx], self.fileformat, res_range)
         emb = self.model(graph.to(self.device)).squeeze(0)
-        nres = torch.tensor([graph.num_nodes], device=self.device)
-        return emb, nres
+        nres = graph.num_nodes
+        return emb, nres, self.query_nums[idx], self.domain_nums[idx], self.res_ranges[idx]
 
 class EmbeddingDataset(Dataset):
     def __init__(self, embeddings):
@@ -230,26 +278,45 @@ class EmbeddingDataset(Dataset):
 
     def __getitem__(self, idx):
         emb = self.embeddings[idx]
-        nres = "?"
-        return emb, nres
+        nres, res_range = "?", "?"
+        query_num = idx + 1
+        domain_num = 1
+        return emb, nres, query_num, domain_num, res_range
 
-def read_coords(fp, fileformat="guess"):
-    if fileformat == "guess":
-        chosen_format = "pdb"
-        file_ext = os.path.splitext(fp)[1].lower()
-        if file_ext == ".cif" or file_ext == ".mmcif":
-            chosen_format = "mmcif"
-        elif file_ext == ".mmtf":
-            chosen_format = "mmtf"
+def extract_res_range(rr):
+    rr_no_ins_code = re.sub(r"[^0-9-]", "", rr)
+    n_hyphen = rr_no_ins_code.count("-")
+    if n_hyphen < 3: # 1-10 or -1-10
+        res_start, res_end = rr_no_ins_code.rsplit("-", 1)
+    elif n_hyphen == 3: # -10--1
+        splits = rr_no_ins_code.split("-")
+        res_start, res_end = "-" + splits[1], "-" + splits[3]
     else:
-        chosen_format = fileformat
+        raise ValueError(f"could not extract residue range: {rr}")
+    return range(int(res_start), int(res_end) + 1)
+
+def read_coords(fp, fileformat="guess", res_range=None):
+    chosen_format = get_file_format(fp, fileformat)
+    if res_range is None:
+        domain_res = None
+    else:
+        domain_res_list = []
+        for rr in res_range.split("_"):
+            domain_res_list.extend(extract_res_range(rr))
+        domain_res = set(domain_res_list)
 
     coords = []
     if chosen_format == "pdb":
         with open(fp) as f:
+            chain_id = None
             for line in f.readlines():
-                if (line.startswith("ATOM  ") or line.startswith("HETATM")) and line[12:16].strip() == "CA":
-                    coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
+                if line.startswith("ATOM  ") and line[12:16].strip() == "CA":
+                    if chain_id is None:
+                        chain_id = line[21]
+                    elif line[21] != chain_id:
+                        break # Only read first chain
+                    if domain_res is None or int(line[22:26]) in domain_res:
+                        coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                 elif line.startswith("ENDMDL"):
                     break
     elif chosen_format == "mmcif" or chosen_format == "mmtf":
@@ -261,20 +328,33 @@ def read_coords(fp, fileformat="guess"):
             from Bio.PDB.mmtf import MMTFParser
             struc = MMTFParser.get_structure(fp)
         for model in struc:
-            for atom in model.get_atoms():
-                if atom.get_name() == "CA":
-                    cs = atom.get_coord()
-                    coords.append([float(cs[0]), float(cs[1]), float(cs[2])])
-            break
+            for chain in model:
+                for res in chain:
+                    if res.get_id()[0] == " ": # Ignore hetero atoms
+                        resnum = res.get_id()[1]
+                        for atom in res:
+                            if atom.get_name() == "CA":
+                                if domain_res is None or resnum in domain_res:
+                                    cs = atom.get_coord()
+                                    coords.append([float(cs[0]), float(cs[1]), float(cs[2])])
+                break # Only read first chain
+            break # Only read first model
     elif chosen_format == "coords":
         with open(fp) as f:
+            c = 0
             for line in f.readlines():
-                coords.append([float(v) for v in line.rstrip().split()])
+                c += 1
+                if domain_res is None or c in domain_res:
+                    coords.append([float(v) for v in line.rstrip().split()])
     else:
         raise ValueError("fileformat must be \"guess\", \"pdb\", \"mmcif\", \"mmtf\" or \"coords\"")
     return coords
 
 def coords_to_graph(coords):
+    if len(coords) == 0:
+        raise NoCoordinatesError(("no Cα coordinates found, check that your file "
+                                  "contains protein residues and that the correct file "
+                                  "format is selected"))
     n_res = len(coords)
     if not isinstance(coords, torch.Tensor):
         coords = torch.tensor(coords)
@@ -314,8 +394,8 @@ def coords_to_graph(coords):
     data = Data(x=x, edge_index=edge_index, coords=coords)
     return data
 
-def read_graph(fp, fileformat="guess"):
-    coords = read_coords(fp, fileformat)
+def read_graph(fp, fileformat="guess", res_range=None):
+    coords = read_coords(fp, fileformat, res_range)
     return coords_to_graph(coords)
 
 def embedding_distance(emb_1, emb_2):
@@ -347,8 +427,8 @@ def embed_coords(coords, device="cpu", model=None):
     graph = coords_to_graph(coords)
     return embed_graph(graph, device, model)
 
-def embed_structure(querystructure, fileformat="guess", device="cpu", model=None):
-    graph = read_graph(querystructure, fileformat)
+def embed_structure(querystructure, fileformat="guess", res_range=None, device="cpu", model=None):
+    graph = read_graph(querystructure, fileformat, res_range)
     return embed_graph(graph, device, model)
 
 def get_batch_size(device="cpu", using_faiss=False):
@@ -366,8 +446,9 @@ def get_num_workers(device="cpu"):
 
 def download_data_if_required(download_afted=False):
     url_base = f"https://zenodo.org/record/{zenodo_record}/files"
-    fps = [trained_model_fp]
-    urls = [f"{url_base}/trained_model.pt"]
+    fps = [trained_model_fp, chainsaw_model_fp]
+    chainsaw_model_url = "https://github.com/JudeWells/chainsaw/raw/main/saved_models/model_v3/weights.pt"
+    urls = [f"{url_base}/trained_model.pt", chainsaw_model_url]
     for targetdb in pre_embedded_dbs:
         fps.append(os.path.join(database_dir, targetdb + ".pt"))
         urls.append(f"{url_base}/{targetdb}.pt")
@@ -376,9 +457,9 @@ def download_data_if_required(download_afted=False):
             fps.append(os.path.join(database_dir, fn))
             urls.append(f"{url_base}/{fn}")
 
-    dirs_that_should_exist = [data_dir, trained_model_dir, database_dir]
+    dirs_that_should_exist = [data_dir, trained_model_dir, database_dir, chainsaw_dir]
     for dir in dirs_that_should_exist:
-        os.makedirs(dir, exist_ok=True)    
+        os.makedirs(dir, exist_ok=True)
 
     printed = False
     for fp, url in zip(fps, urls):
@@ -389,7 +470,7 @@ def download_data_if_required(download_afted=False):
                       sep="", file=sys.stderr)
                 printed = True
             if not printed:
-                print("Downloading data as first time setup (~220 MB) to ", data_dir,
+                print("Downloading data as first time setup (~660 MB) to ", data_dir,
                       ", internet connection required, this can take a few minutes",
                       sep="", file=sys.stderr)
                 printed = True
@@ -408,6 +489,8 @@ def download_data_if_required(download_afted=False):
                     d = torch.load(fp, map_location="cpu")
                     if fp == trained_model_fp:
                         assert "model" in d
+                    elif fp == chainsaw_model_fp:
+                        assert "layers.30.4.weight" in d
                     else:
                         assert "notes" in d
                         assert len(d["notes"]) > 10
@@ -425,9 +508,10 @@ def download_data_if_required(download_afted=False):
 
 def progres_search_generator(querystructure=None, querylist=None, queryembeddings=None,
                              targetdb=None, fileformat="guess", minsimilarity=default_minsimilarity,
-                             maxhits=default_maxhits, device="cpu", batch_size=None):
+                             maxhits=default_maxhits, chainsaw=False, device="cpu",
+                             batch_size=None):
     if querystructure is None and querylist is None and queryembeddings is None:
-        raise ValueError("One of querystructure, querylist or queryembeddings must be given")
+        raise ValueError("one of querystructure, querylist or queryembeddings must be given")
     if targetdb is None:
         raise ValueError("targetdb must be given")
 
@@ -436,28 +520,30 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
     if targetdb in pre_embedded_dbs_faiss:
         import faiss
         print(f"Loading {targetdb} data, this can take a minute", file=sys.stderr)
-        target_index = faiss.read_index(os.path.join(database_dir, f"{targetdb}.index"))
         target_data = torch.load(os.path.join(database_dir, f"{targetdb}_noembs.pt"), map_location=device)
+        target_index = faiss.read_index(os.path.join(database_dir, f"{targetdb}.index"))
         search_type = "faiss"
     elif targetdb in pre_embedded_dbs:
         target_fp = os.path.join(database_dir, targetdb + ".pt")
         target_data = torch.load(target_fp, map_location=device)
+        target_index = None
         search_type = "torch"
     else:
         target_data = torch.load(targetdb, map_location=device)
+        target_index = None
         search_type = "torch"
 
     model = load_trained_model(device)
     if querystructure is not None:
         query_fps = [querystructure]
-        data_set = StructureDataset(query_fps, fileformat, model, device)
+        data_set = StructureDataset(query_fps, fileformat, model, device, chainsaw)
         num_workers = get_num_workers(device)
     elif querylist is not None:
         query_fps = []
         with open(querylist) as f:
             for line in f.readlines():
                 query_fps.append(line.rstrip())
-        data_set = StructureDataset(query_fps, fileformat, model, device)
+        data_set = StructureDataset(query_fps, fileformat, model, device, chainsaw)
         num_workers = get_num_workers(device)
     else:
         data_set = EmbeddingDataset(queryembeddings.to(device))
@@ -473,14 +559,18 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
         num_workers=num_workers,
     )
 
+    return search_generator_inner(data_loader, query_fps, targetdb, target_data, target_index,
+                                  search_type, minsimilarity, maxhits, device)
+
+def search_generator_inner(data_loader, query_fps, targetdb, target_data, target_index,
+                           search_type, minsimilarity=default_minsimilarity,
+                           maxhits=default_maxhits, device="cpu"):
     with torch.no_grad():
-        qi = 0
-        for embs, nress in data_loader:
+        for embs, nress, query_nums, domain_nums, res_ranges in data_loader:
             if search_type == "faiss":
                 sims_ord_batch, inds_ord_batch = target_index.search(embs.cpu().numpy(), maxhits)
 
             for bi in range(embs.size(0)):
-                query_size = nress[bi].item() if type(nress) == torch.Tensor else "?"
                 if search_type == "faiss":
                     sims_ord = sims_ord_batch[bi]
                     inds_ord = inds_ord_batch[bi]
@@ -506,10 +596,13 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
                         similarities.append(similarity)
                         notes.append(target_data["notes"][i])
 
+                query_num = query_nums[bi].item()
                 result_dict = {
-                    "query_num":     qi + 1,
-                    "query":         query_fps[qi],
-                    "query_size":    query_size,
+                    "query_num":     query_num,
+                    "query":         query_fps[query_num - 1],
+                    "domain_num":    domain_nums[bi].item(),
+                    "domain_size":   nress[bi].item() if type(nress) == torch.Tensor else nress[bi],
+                    "res_range":     res_ranges[bi],
                     "database":      targetdb,
                     "minsimilarity": minsimilarity,
                     "maxhits":       maxhits,
@@ -518,7 +611,6 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
                     "similarities":  similarities,
                     "notes":         notes,
                 }
-                qi += 1
 
                 if device != "cpu" and search_type == "torch":
                     del dists
@@ -528,16 +620,18 @@ def progres_search_generator(querystructure=None, querylist=None, queryembedding
 
 def progres_search(querystructure=None, querylist=None, queryembeddings=None, targetdb=None,
                    fileformat="guess", minsimilarity=default_minsimilarity, maxhits=default_maxhits,
-                   device="cpu", batch_size=None):
+                   chainsaw=False, device="cpu", batch_size=None):
     generator = progres_search_generator(querystructure, querylist, queryembeddings, targetdb,
-                                         fileformat, minsimilarity, maxhits, device, batch_size)
+                                         fileformat, minsimilarity, maxhits, chainsaw, device,
+                                         batch_size)
     return list(generator)
 
 def progres_search_print(querystructure=None, querylist=None, queryembeddings=None, targetdb=None,
                          fileformat="guess", minsimilarity=default_minsimilarity,
-                         maxhits=default_maxhits, device="cpu", batch_size=None):
+                         maxhits=default_maxhits, chainsaw=False, device="cpu", batch_size=None):
     generator = progres_search_generator(querystructure, querylist, queryembeddings, targetdb,
-                                         fileformat, minsimilarity, maxhits, device, batch_size)
+                                         fileformat, minsimilarity, maxhits, chainsaw, device,
+                                         batch_size)
     version = importlib.metadata.version("progres")
 
     for rd in generator:
@@ -547,13 +641,17 @@ def progres_search_print(querystructure=None, querylist=None, queryembeddings=No
         padding_inds      = max(len(s) for s in inds_str        + ["# HIT_N" ])
         padding_domids    = max(len(s) for s in rd["domains"]   + ["DOMAIN"  ])
         padding_hits_nres = max(len(s) for s in hits_nres_str   + ["HIT_NRES"])
-        faiss_str = ", FAISS search" if targetdb in pre_embedded_dbs_faiss else ""
+        res_range_str = f"1-{rd['domain_size']}" if rd["res_range"] == "all" else rd["res_range"]
+        chainsaw_str = "yes" if chainsaw else "no"
+        faiss_str = "yes" if targetdb in pre_embedded_dbs_faiss else "no"
 
-        print("# QUERY_NUM:" , rd["query_num"])
-        print("# QUERY:"     , rd["query"])
-        print("# QUERY_SIZE:", rd["query_size"], "residues")
+        print("# QUERY_NUM:"  , rd["query_num"])
+        print("# QUERY:"      , rd["query"])
+        print("# DOMAIN_NUM:" , rd["domain_num"])
+        print("# DOMAIN_SIZE:", rd["domain_size"], "residues", "(" + res_range_str + ")")
         print("# DATABASE:", targetdb)
-        print(f"# PARAMETERS: minsimilarity {minsimilarity}, maxhits {maxhits}, progres v{version}{faiss_str}")
+        print(f"# PARAMETERS: minsimilarity {minsimilarity}, maxhits {maxhits},",
+              f"chainsaw {chainsaw_str}, faiss {faiss_str}, progres v{version}")
         print("  ".join([
             "#" + " HIT_N".rjust(padding_inds - 1),
             "DOMAIN".ljust(padding_domids),
@@ -584,7 +682,8 @@ def progres_score_print(structure1, structure2, fileformat1="guess",
     score = progres_score(structure1, structure2, fileformat1, fileformat2, device)
     print(score)
 
-def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", batch_size=None):
+def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu",
+                  batch_size=None, float_type=torch.float16):
     download_data_if_required()
 
     fps, domids, notes = [], [], []
@@ -609,14 +708,14 @@ def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu", b
     with torch.no_grad():
         embeddings = torch.zeros(len(data_set), embedding_size, device=device)
         n_residues = torch.zeros(len(data_set), dtype=torch.int, device=device)
-        for bi, (embs, nress) in enumerate(data_loader):
+        for bi, (embs, nress, _, _, _) in enumerate(data_loader):
             embeddings[(bi * batch_size):(bi * batch_size + embs.size(0))] = embs
-            n_residues[(bi * batch_size):(bi * batch_size + embs.size(0))] = nress.squeeze(1)
+            n_residues[(bi * batch_size):(bi * batch_size + embs.size(0))] = nress
 
     torch.save(
         {
             "ids"       : domids,
-            "embeddings": embeddings.cpu().to(torch.float16),
+            "embeddings": embeddings.cpu().to(float_type),
             "nres"      : list(n_residues.cpu().numpy()),
             "notes"     : notes,
         },

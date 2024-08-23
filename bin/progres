@@ -15,22 +15,29 @@ subparsers = parser.add_subparsers(dest="mode",
     help="the mode to run progres in, run \"progres {mode} -h\" to see help for each")
 
 parser_search = subparsers.add_parser("search",
-    description="Search one or more queries against a pre-embedded database.",
-    help="search one or more queries against a pre-embedded database")
+    description=(
+        "Search one or more protein structures against a pre-embedded database. "
+        "See https://github.com/greener-group/progres for documentation and citation information. "
+        f"This is version {importlib.metadata.version('progres')} of the software."
+    ),
+    help="search one or more protein structures against a pre-embedded database")
 parser_search.add_argument("-q", "--querystructure",
     help="query structure file in PDB/mmCIF/MMTF/coordinate format")
 parser_search.add_argument("-l", "--querylist",
     help="text file with one query file path per line")
 parser_search.add_argument("-t", "--targetdb", required=True,
-    help=("pre-embedded database to search against, either "
-          "\"scope95\", \"scope40\", \"cath40\", \"ecod70\", \"af21org\", \"afted\" or a file path"))
+    help=("pre-embedded database to search against, either \"scope95\", \"scope40\", "
+          "\"cath40\", \"ecod70\", \"pdb100\", \"af21org\", \"afted\" or a file path"))
 parser_search.add_argument("-f", "--fileformat",
     choices=["guess", "pdb", "mmcif", "mmtf", "coords"], default="guess",
     help="file format of the query structure(s), by default guessed from the file extension")
 parser_search.add_argument("-s", "--minsimilarity", type=float, default=0.8,
-    help="similarity threshold above which to return hits, default 0.8")
+    help="Progres score (0 -> 1) above which to return hits, default 0.8")
 parser_search.add_argument("-m", "--maxhits", type=int, default=100,
-    help="maximum number of hits to return, default 100")
+    help="maximum number of hits per domain to return, default 100")
+parser_search.add_argument("-c", "--chainsaw", default=False, action="store_true",
+    help=("split the query structure(s) into domains with Chainsaw and search with "
+          "each domain separately"))
 parser_search.add_argument("-d", "--device", default="cpu",
     help="device to run on, default is \"cpu\"")
 
@@ -38,7 +45,9 @@ parser_score = subparsers.add_parser("score",
     description=(
         "Calculate the Progres score between two protein domains. "
         "The order of the domains does not affect the score. "
-        "A score of 0.8 or higher indicates the same fold."
+        "A score of 0.8 or higher indicates the same fold. "
+        "See https://github.com/greener-group/progres for documentation and citation information. "
+        f"This is version {importlib.metadata.version('progres')} of the software."
     ),
     help="calculate the Progres score between two protein domains")
 parser_score.add_argument("structure1",
@@ -55,7 +64,11 @@ parser_score.add_argument("-d", "--device", default="cpu",
     help="device to run on, default is \"cpu\"")
 
 parser_embed = subparsers.add_parser("embed",
-    description="Embed a dataset of structures to allow it to be searched against.",
+    description=(
+        "Embed a dataset of structures to allow it to be searched against. "
+        "See https://github.com/greener-group/progres for documentation and citation information. "
+        f"This is version {importlib.metadata.version('progres')} of the software."
+    ),
     help="embed a dataset of structures to allow it to be searched against")
 parser_embed.add_argument("-l", "--structurelist", required=True,
     help="text file with file path, domain name and optional note per line")
@@ -79,11 +92,11 @@ def main():
         if args.querystructure:
             progres_search_print(querystructure=args.querystructure, targetdb=args.targetdb,
                                  fileformat=args.fileformat, minsimilarity=args.minsimilarity,
-                                 maxhits=args.maxhits, device=args.device)
+                                 maxhits=args.maxhits, chainsaw=args.chainsaw, device=args.device)
         elif args.querylist:
             progres_search_print(querylist=args.querylist, targetdb=args.targetdb,
                                  fileformat=args.fileformat, minsimilarity=args.minsimilarity,
-                                 maxhits=args.maxhits, device=args.device)
+                                 maxhits=args.maxhits, chainsaw=args.chainsaw, device=args.device)
         else:
             print("One of -q and -l must be given for structure searching", file=sys.stderr)
     elif args.mode == "score":

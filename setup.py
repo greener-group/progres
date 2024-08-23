@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="progres",
-    version="0.2.4",
+    version="0.2.5",
     author="Joe G Greener",
     author_email="jgreener@mrc-lmb.cam.ac.uk",
     description="Fast protein structure searching using structure graph embeddings",
@@ -22,6 +22,6 @@ setuptools.setup(
     license="MIT",
     keywords="protein structure search graph embedding",
     scripts=["bin/progres"],
-    install_requires=["biopython", "mmtf-python", "einops"],
+    install_requires=["biopython", "mmtf-python", "einops", "pydantic"],
     include_package_data=True,
 )
