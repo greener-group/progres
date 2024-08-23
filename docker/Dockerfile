@@ -35,6 +35,7 @@ RUN . ${CONDA_INSTALL_PATH}/etc/profile.d/conda.sh \
     && conda activate ${CONDA_ENV_NAME} \
     && conda install --yes pytorch=1.11 faiss-cpu -c pytorch \
     && conda install --yes pytorch-scatter pyg -c pyg \
+    && conda install --yes kimlab::stride \
     && conda clean --yes --all
 
 ARG PROGRES_REPO
