@@ -79,6 +79,8 @@ jobs:
       run: conda install pytorch==1.11 faiss-cpu -c pytorch
     - name: Install PyTorch Scatter and PyTorch Geometric
       run: conda install pytorch-scatter pyg -c pyg
+    - name: Install STRIDE
+      run: conda install kimlab::stride
     - name: Test install
       run: pip install progres
     - name: Test help
@@ -89,11 +91,19 @@ jobs:
       run: |
         wget https://files.rcsb.org/view/1CRN.pdb
         wget https://files.rcsb.org/view/1SSU.cif
+        wget https://alphafold.ebi.ac.uk/files/AF-P31434-F1-model_v4.pdb
     - name: Test search
       run: time progres search -q 1CRN.pdb -t scope95
+    - name: Test domain split
+      run: time progres search -q AF-P31434-F1-model_v4.pdb -t cath40 -c
     - name: Test score
       run: time progres score 1CRN.pdb 1SSU.cif > score.txt
     - name: Check score
       run: |
         sc=$(cat score.txt)
         if [ ${sc:0:7} == "0.72652" ]; then echo "Correct score"; else echo "Wrong score, score is $sc"; exit 1; fi
+    - name: Test database embedding
+      run: |
+        cd data
+        time progres embed -l filepaths.txt -o out.pt
+        time progres search -q query.pdb -t out.pt
