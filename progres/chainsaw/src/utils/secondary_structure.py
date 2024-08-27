@@ -23,7 +23,8 @@ LOG = logging.getLogger(__name__)
 def calculate_ss(pdbfile, chain, stride_path, ssfile='pdb_ss'):
     assert os.path.exists(pdbfile)
     with open(ssfile, 'w') as ssout_file:
-        args = [stride_path, pdbfile, '-r' + chain]
+        chain_arg = '-r' + chain
+        args = [stride_path, pdbfile, chain_arg.rstrip()]
         LOG.info(f"Running command: {' '.join(args)}")
         try:
             subprocess.run(args, 
