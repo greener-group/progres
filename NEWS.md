@@ -1,5 +1,9 @@
 # Progres release notes
 
+## v0.2.7 - Sep 2024
+
+- Bugs in domain splitting with a blank chain ID and Mac multithreading are fixed.
+
 ## v0.2.6 - Aug 2024
 
 - Python packaging issues are fixed.
