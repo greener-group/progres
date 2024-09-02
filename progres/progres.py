@@ -438,8 +438,8 @@ def get_batch_size(device="cpu", using_faiss=False):
         return 8
 
 def get_num_workers(device="cpu"):
-    # Multithreading error on Windows
-    if device == "cpu" and os.name != "nt":
+    # Multithreading error on Windows and Mac
+    if device == "cpu" and not (sys.platform.startswith("win") or sys.platform.startswith("darwin")):
         return torch.get_num_threads()
     else:
         return 0

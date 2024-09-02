@@ -16,7 +16,7 @@ Searching is done by domain but [Chainsaw](https://github.com/JudeWells/chainsaw
 ## Installation
 
 1. Python 3.8 or later is required. The software is OS-independent.
-2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter), [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric), [FAISS](https://github.com/facebookresearch/faiss) and [STRIDE](https://webclu.bio.wzw.tum.de/stride) as appropriate for your system. A GPU is not required but may provide speedup in certain situations. Example commands:
+2. Install [PyTorch](https://pytorch.org) 1.11 or later, [PyTorch Scatter](https://github.com/rusty1s/pytorch_scatter), [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric), [FAISS](https://github.com/facebookresearch/faiss) and [STRIDE](https://webclu.bio.wzw.tum.de/stride) as appropriate for your system. A GPU is not required but may provide speedup in certain situations. Example commands for Linux (and other operating systems, bar the STRIDE install):
 ```bash
 conda create -n prog python=3.9
 conda activate prog
