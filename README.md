@@ -13,6 +13,8 @@ For the AlphaFold database, initial data loading takes around a minute but subse
 Currently [SCOPe](https://scop.berkeley.edu), [CATH](http://cathdb.info), [ECOD](http://prodata.swmed.edu/ecod), the whole [PDB](https://www.rcsb.org), the [AlphaFold structures for 21 model organisms](https://doi.org/10.1093/nar/gkab1061) and the [AlphaFold database TED domains](https://www.biorxiv.org/content/10.1101/2024.03.18.585509) are provided for searching against.
 Searching is done by domain but [Chainsaw](https://github.com/JudeWells/chainsaw) can be used to automatically split query structures into domains.
 
+A [web server](https://progres.mrc-lmb.cam.ac.uk) is available to run Progres.
+
 ## Installation
 
 1. Python 3.8 or later is required. The software is OS-independent.
@@ -186,3 +188,5 @@ We also include code from [SupContrast](https://github.com/HobbitLong/SupContras
 
 Please open issues or [get in touch](http://jgreener64.github.io) with any feedback.
 Contributions via pull requests are welcome.
+
+Code for the web server is available [here](https://github.com/greener-group/progres_server).
