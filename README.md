@@ -72,6 +72,11 @@ progres search -q query.pdb -t scope95
 
 Other tools for splitting query structures into domains include [Merizo](https://github.com/psipred/Merizo) and [SWORD2](https://www.dsimb.inserm.fr/SWORD2).
 You can also slice out domains manually using software such as the `pdb_selres` command from [pdb-tools](http://www.bonvinlab.org/pdb-tools).
+For example, to slice out residues 20-120:
+```bash
+pip install pdb-tools
+pdb_selres -20:120 query.pdb > domain.pdb
+```
 
 Interpreting the hit descriptions depends on the database being searched.
 The domain name often includes a reference to the corresponding PDB file, for example d1a6ja_ refers to PDB ID 1A6J chain A, and this can be opened in the [RCSB PDB structure view](https://www.rcsb.org/3d-view/1A6J/1) to get a quick look.
