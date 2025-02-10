@@ -67,7 +67,7 @@ progres search -q query.pdb -t scope95
 - `-t` is the pre-embedded database to search against. Currently this must be either one of the databases listed below or the file path to a pre-embedded dataset generated with `progres embed`.
 - `-f` determines the file format of the query structure (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`). By default this is guessed from the file extension, with `pdb` chosen if a guess can't be made. `coords` refers to a text file with the coordinates of a Cα atom separated by white space on each line.
 - `-s` is the Progres score (0 -> 1) above which to return hits, default 0.8. As discussed in the paper, 0.8 indicates the same fold.
-- `-m` is the maximum number of hits to return, default 100.
+- `-m` is the maximum number of hits to return, default 100. Hits will only be returned if they are above the minimum score given above.
 - `-c` indicates to split the query structure(s) into domains with Chainsaw and search with each domain separately. If no domains are found with Chainsaw, no results will be returned. Only the first chain in each file is considered. Running Chainsaw may take a few seconds.
 
 Other tools for splitting query structures into domains include [Merizo](https://github.com/psipred/Merizo) and [SWORD2](https://www.dsimb.inserm.fr/SWORD2).
