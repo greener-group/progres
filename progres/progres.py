@@ -407,6 +407,7 @@ def embedding_similarity(emb_1, emb_2):
     return (1 + cosine_dist) / 2 # Runs 0 (far) to 1 (close)
 
 def load_trained_model(device="cpu"):
+    download_data_if_required()
     model = Model().to(device)
     loaded_model = torch.load(trained_model_fp, map_location=device)
     model.load_state_dict(loaded_model["model"])
