@@ -179,6 +179,10 @@ score # tensor(1.) in this case since they are the same embedding
 embs = torch.nn.functional.normalize(torch.randn(1000, 128), dim=1)
 scores = pg.embedding_similarity(embs.unsqueeze(0), embs.unsqueeze(1))
 scores.shape # torch.Size([1000, 1000])
+
+# Check for data and download if required
+# This should be done automatically when calling high-level functions
+pg.download_data_if_required()
 ```
 
 ## Scripts
