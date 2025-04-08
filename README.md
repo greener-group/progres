@@ -2,9 +2,9 @@
 
 [![Build status](https://github.com/greener-group/progres/workflows/CI/badge.svg)](https://github.com/greener-group/progres/actions)
 
-This repository contains the method from the pre-print:
+This repository contains the method from the paper:
 
-- Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. bioRxiv (2022) - [link](https://www.biorxiv.org/content/10.1101/2022.11.28.518224)
+- Greener JG and Jamali K. Fast protein structure searching using structure graph embeddings. Bioinformatics Advances 5:1, vbaf042 (2025) - [link](https://academic.oup.com/bioinformaticsadvances/article/5/1/vbaf042/8107707)
 
 It provides the `progres` Python package that lets you search structures against pre-embedded structural databases, score pairs of structures and pre-embed datasets for searching against.
 Searching typically takes 1-2 s and is much faster for multiple queries.
