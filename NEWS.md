@@ -1,5 +1,11 @@
 # Progres release notes
 
+## v1.0.0 - Apr 2025
+
+Stable version of Progres to accompany the published paper (https://academic.oup.com/bioinformaticsadvances/article/5/1/vbaf042/8107707).
+
+- A bug in loading the trained model when the data has not been downloaded is fixed.
+
 ## v0.2.7 - Sep 2024
 
 - Bugs in domain splitting with a blank chain ID and Mac multithreading are fixed.
