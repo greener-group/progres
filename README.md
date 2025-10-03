@@ -187,7 +187,7 @@ pg.download_data_if_required()
 
 ## Scripts
 
-Datasets and scripts for benchmarking (including for other methods), FAISS index generation and training are in the `scripts` directory.
+Datasets and scripts for benchmarking (including for other methods), FAISS index generation, embedding the TED domains and training are in the `scripts` directory.
 The trained model and pre-embedded databases are available on [Zenodo](https://zenodo.org/record/7782088).
 
 ## Notes
