@@ -124,6 +124,7 @@ progres embed -l filepaths.txt -o searchdb.pt
 - `-l` is a text file with information on one structure per line, each of which will be one entry in the output. White space should separate the file path to the structure and the domain name, with optionally any additional text being treated as a note for the notes column of the results.
 - `-o` is the output file path for the PyTorch file containing a dictionary with the embeddings and associated data. It can be read in with `torch.load`.
 - `-f` determines the file format of each structure as above (`guess`, `pdb`, `mmcif`, `mmtf` or `coords`).
+- `-c` indicates to split each structure into domains with Chainsaw to allow searching against each domain separately. If no domains are found with Chainsaw for a structure, it will not be added. Only the first chain in each file is considered. Running Chainsaw may take a few seconds.
 
 Again, the structures should correspond to single protein domains.
 The embeddings are stored as Float16, which has no noticeable effect on search performance.

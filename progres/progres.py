@@ -683,20 +683,34 @@ def progres_score_print(structure1, structure2, fileformat1="guess",
     score = progres_score(structure1, structure2, fileformat1, fileformat2, device)
     print(score)
 
-def progres_embed(structurelist, outputfile, fileformat="guess", device="cpu",
+def progres_embed(structurelist, outputfile, fileformat="guess", chainsaw=False, device="cpu",
                   batch_size=None, float_type=torch.float16):
     download_data_if_required()
 
-    fps, domids, notes = [], [], []
+    fps, domids_fp, notes_fp = [], [], []
     with open(structurelist) as f:
         for line in f.readlines():
             cols = line.strip().split(None, 2)
             fps.append(cols[0])
-            domids.append(cols[1])
-            notes.append(cols[2] if len(cols) > 2 else "-")
+            domids_fp.append(cols[1])
+            notes_fp.append(cols[2] if len(cols) > 2 else "-")
 
     model = load_trained_model(device)
-    data_set = StructureDataset(fps, fileformat, model, device)
+    data_set = StructureDataset(fps, fileformat, model, device, chainsaw)
+    if chainsaw:
+        domids, notes = [], []
+        i, dom_i = 0, 1
+        for fp, domid, note in zip(fps, domids_fp, notes_fp):
+            while data_set.file_paths[i] == fp:
+                domids.append(f"{domid}_D{dom_i}")
+                notes.append(f"{note} - domain {dom_i} ({data_set.res_ranges[i]})")
+                i += 1
+                dom_i += 1
+            dom_i = 1
+    else:
+        domids, notes = domids_fp, notes_fp
+    assert len(domids) == len(notes) == len(data_set)
+
     if batch_size is None:
         batch_size = get_batch_size(device)
     data_loader = DataLoader(
