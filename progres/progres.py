@@ -701,7 +701,7 @@ def progres_embed(structurelist, outputfile, fileformat="guess", chainsaw=False,
         domids, notes = [], []
         i, dom_i = 0, 1
         for fp, domid, note in zip(fps, domids_fp, notes_fp):
-            while data_set.file_paths[i] == fp:
+            while i < len(data_set) and data_set.file_paths[i] == fp:
                 domids.append(f"{domid}_D{dom_i}")
                 notes.append(f"{note} - domain {dom_i} ({data_set.res_ranges[i]})")
                 i += 1
