@@ -1,5 +1,10 @@
 # Progres release notes
 
+## v1.1.0 - Jan 2026
+
+- The Big Fantastic Virus Database (BFVD) is made available to search against.
+- The embedding mode for generating databases to search against can now split structures into domains with Chainsaw.
+
 ## v1.0.0 - Apr 2025
 
 Stable version of Progres to accompany the published paper (https://academic.oup.com/bioinformaticsadvances/article/5/1/vbaf042/8107707).
