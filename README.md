@@ -197,6 +197,8 @@ The trained model and pre-embedded databases are available on [Zenodo](https://z
 The implementation of the E(n)-equivariant GNN uses [EGNN PyTorch](https://github.com/lucidrains/egnn-pytorch).
 We also include code from [SupContrast](https://github.com/HobbitLong/SupContrast) and [Chainsaw](https://github.com/JudeWells/chainsaw).
 
+The Progres architecture [has been extended](https://www.biorxiv.org/content/10.1101/2025.11.18.689110v1) by another group to account for circular permutations.
+
 Please open issues or [get in touch](http://jgreener64.github.io) with any feedback.
 Contributions via pull requests are welcome.
 
