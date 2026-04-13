@@ -26,6 +26,7 @@ conda install pytorch=1.11 faiss-cpu -c pytorch
 conda install pytorch-scatter pyg -c pyg
 conda install kimlab::stride
 ```
+Note that installing on PyTorch versions from 2.6 may require setting `TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1`.
 3. Run `pip install progres`, which will also install [Biopython](https://biopython.org), [mmtf-python](https://github.com/rcsb/mmtf-python), [einops](https://github.com/arogozhnikov/einops) and [pydantic](https://github.com/pydantic/pydantic) if they are not already present.
 4. The first time you search with the software the trained model and pre-embedded databases (~850 MB) will be downloaded to the package directory from [Zenodo](https://zenodo.org/record/7782088), which requires an internet connection. This can take a few minutes. You can set the environmental variable `PROGRES_DATA_DIR` to change where this data is stored, for example if you cannot write to the package directory. Remember to keep it set the next time you run Progres.
 5. The first time you search against the AlphaFold database TED domains the pre-embedded database (~33 GB) will be downloaded similarly. This can take a while. Make sure you have enough disk space!
